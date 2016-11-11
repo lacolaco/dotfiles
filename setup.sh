@@ -1,7 +1,7 @@
 #! /bin/sh
 
-cp -p .gitconfig ~/
-cp -p fish ~/.config
+cp -R .gitconfig ~/
+cp -R ./fish ~/.config
 
 # Homebrew
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"

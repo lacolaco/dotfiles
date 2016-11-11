@@ -2,7 +2,7 @@
 set -x PATH ~/bin /usr/local/bin /usr/bin /bin /usr/sbin /sbin
 
 # Node
-set -x PATH ~/.nodebrew/current/bin
+set -x PATH $PATH ~/.nodebrew/current/bin
 
 # Golang
 set -x GOPATH ~/gopath
