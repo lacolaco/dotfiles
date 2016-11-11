@@ -18,6 +18,8 @@ set -x LANG "ja_JP.UTF-8"
 
 set -e fish_greeting # erase greeting
 
+# $(npm bin) の代わりに使う。
+# npmbin tsc --help
 function npmbin
   eval (pwd)"/node_modules/.bin/"(echo $argv)
 end
