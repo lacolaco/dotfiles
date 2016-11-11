@@ -1,7 +1,7 @@
-#! /bin/bash
+#! /bin/sh
 
-ln -s ~/src/dotfiles/.zshrc ~/
-ln -s ~/src/dotfiles/.gitconfig ~/
+cp -p .gitconfig ~/
+cp -p fish ~/.config
 
 # Homebrew
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -18,8 +18,8 @@ cat ~/.ssh/id_rsa.pub | pbcopy
 
 # node
 curl -L git.io/nodebrew | perl - setup
-nodebrew install-binary v5
-nodebrew use v5
+nodebrew install-binary 6
+nodebrew use 6
 
 # AppEngine
 echo "Download AppEngine SDK"
