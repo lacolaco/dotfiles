@@ -6,6 +6,7 @@ set -x PATH ~/.nodebrew/current/bin
 
 # Golang
 set -x GOPATH ~/gopath
+set -x GOROOT (brew --prefix go)"/libexec"
 set -x PATH $PATH $GOPATH/bin $GOROOT/bin
 
 # GCP
