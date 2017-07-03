@@ -12,13 +12,15 @@ brew install tree
 brew install curl
 brew install wget
 brew install git
+brew install nodebrew
 
 brew install caskroom/cask/brew-cask
+brew cask install google-chrome
+brew cask install google-chrome-canary
 brew cask install google-japanese-ime
 brew cask install sourcetree
 brew cask install dropbox
 brew cask install skitch
-brew cask install charles
-brew cask install gitter
 brew cask install webstorm
 brew cask install visual-studio-code
+brew cask install slack
