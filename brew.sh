@@ -21,6 +21,6 @@ brew cask install google-japanese-ime
 brew cask install sourcetree
 brew cask install dropbox
 brew cask install skitch
-brew cask install webstorm
+brew cask install jetbrains-toolbox
 brew cask install visual-studio-code
 brew cask install slack
