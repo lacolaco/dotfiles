@@ -2,16 +2,28 @@
 set -x PATH /usr/local/bin /usr/bin /bin /usr/sbin /sbin
 
 # Node
-# set -x PATH $PATH ~/.nodebrew/current/bin
+set -x PATH $PATH ~/.nodebrew/current/bin
 
-# Golang
-# set -x GOPATH ~/gopath
-# set -x GOROOT (brew --prefix go)"/libexec"
-# set -x PATH $PATH $GOPATH/bin $GOROOT/bin
-
-# GCP
-# set -x PATH $PATH ~/go_appengine ~/google-cloud-sdk/bin
+set -x LANG "ja_JP.UTF-8"
 
 # Fish
-set -x LANG "ja_JP.UTF-8"
-set -x fish_greeting "" # erase greeting
+
+set -x fish_greeting ""
+
+# Ruby
+
+set -x RBENV_ROOT /usr/local/var/rbenv
+status --is-interactive; and source (rbenv init -|psub)
+
+# Git
+
+function commit_empty 
+  git commit --allow-empty -m "NOPR: squash me [ci skip]"
+end
+
+function gitco
+  set argv $argv "-"
+  git checkout $argv[1]
+end
+
+echo "config.fish is loaded."
