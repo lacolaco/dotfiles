@@ -1,5 +1,21 @@
 #! /bin/sh
 
+# .gitconfig
+
+echo "=== .gitconfig ==="
+echo 
+FILE=`cat ~/.gitconfig`
+echo "$FILE"
+echo 
+read -p "コピーしますか？ [y/N]" -n 1 -r
+echo 
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    echo "$FILE" > ./.gitconfig
+    echo "Updated!"
+fi
+echo 
+
 # config.fish
 
 echo "=== config.fish ==="
