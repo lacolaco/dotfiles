@@ -21,6 +21,8 @@ brew install git
 brew install nodebrew
 brew install rbenv
 brew install nodenv
+brew tap dart-lang/dart
+brew install dart
 
 brew install caskroom/cask/brew-cask
 brew cask install google-chrome

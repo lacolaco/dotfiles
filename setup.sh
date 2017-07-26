@@ -28,8 +28,8 @@ brew doctor
 
 # nodebrew
 echo "=== Install Nodebrew"
-nodebrew install-binary 6
-nodebrew use 6
+nodebrew install-binary latest
+nodebrew use latest
 
 echo "=== Setup Mac environment"
 defaults write com.apple.finder AppleShowAllFiles TRUE

@@ -15,6 +15,9 @@ set -x fish_greeting ""
 set -x RBENV_ROOT /usr/local/var/rbenv
 status --is-interactive; and source (rbenv init -|psub)
 
+# Dart
+set -x PATH $PATH ~/.pub-cache/bin
+
 # Git
 
 function commit_empty 
