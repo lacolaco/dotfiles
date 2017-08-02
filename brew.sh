@@ -33,3 +33,5 @@ brew cask install skitch
 brew cask install jetbrains-toolbox
 brew cask install visual-studio-code
 brew cask install slack
+brew cask install docker
+brew cask install atom
