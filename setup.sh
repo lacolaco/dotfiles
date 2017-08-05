@@ -30,6 +30,7 @@ brew doctor
 echo "=== Install Nodebrew"
 nodebrew install-binary latest
 nodebrew use latest
+npm set progress=false # raise performance
 
 echo "=== Setup Mac environment"
 defaults write com.apple.finder AppleShowAllFiles TRUE
