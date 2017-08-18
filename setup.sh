@@ -35,3 +35,6 @@ npm set progress=false # raise performance
 echo "=== Setup Mac environment"
 defaults write com.apple.finder AppleShowAllFiles TRUE
 killall Finder
+
+# Git
+git config --global core.editor 'nano'
