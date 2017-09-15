@@ -9,8 +9,8 @@
 	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
 	trustExitCode = true
 [user]
-	name = laco0416
-	email = laco0416+github@gmail.com
+	name = Suguru Inatomi
+	email = suguru.inatomi@gmail.com
 [color]
 	ui = auto
 [url "git@github.com:"]
