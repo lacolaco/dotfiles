@@ -29,4 +29,12 @@ function gitco
   git checkout $argv[1]
 end
 
+function hp
+  history | peco
+end
+
+function nex
+  nodenv exec $argv
+end
+
 echo "config.fish is loaded."

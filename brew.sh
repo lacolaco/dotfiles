@@ -17,6 +17,7 @@ echo "=== Install Homebrew packages"
 brew install tree
 brew install curl
 brew install wget
+brew install peco
 brew install git
 brew install nodebrew
 brew install rbenv
