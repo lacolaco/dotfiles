@@ -18,6 +18,10 @@ status --is-interactive; and source (rbenv init -|psub)
 # Dart
 set -x PATH $PATH ~/.pub-cache/bin
 
+# Flutter
+
+set -x PATH $PATH ~/flutter/bin
+
 # Git
 
 function commit_empty 
