@@ -32,18 +32,18 @@ then
 fi
 echo 
 
-# fishfile
+# ph-my-fish
 
-echo "=== fishfile ==="
+echo "=== oh-my-fish ==="
 echo 
-FILE=`cat ~/.config/fish/fishfile`
+FILE=`cat ~/.config/omf/bundle`
 echo "$FILE"
 echo 
 read -p "コピーしますか？ [y/N]" -n 1 -r
 echo 
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-    echo "$FILE" > ./fish/fishfile
+    echo "$FILE" > ./omf/bundle
     echo "Updated!"
 fi
 echo 

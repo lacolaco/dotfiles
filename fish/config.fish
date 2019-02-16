@@ -1,21 +1,14 @@
 # Init PATH
 set -x PATH /usr/local/bin /usr/bin /bin /usr/sbin /sbin
 
-# Node
-set -x PATH $PATH ~/.nodebrew/current/bin
-
 set -x LANG "ja_JP.UTF-8"
+
+# Node
+set -xg PATH $PATH ~/.nodebrew/current/bin
 
 # Fish
 
 set -x fish_greeting ""
-
-# Dart
-set -x PATH $PATH ~/.pub-cache/bin
-
-# Flutter
-
-set -x PATH $PATH ~/flutter/bin
 
 # Git
 

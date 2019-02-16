@@ -1,7 +1,7 @@
 #! /bin/sh
 
 cp -R .gitconfig ~/
-cp -R ./fish ~/.config
+mkdir -p ~/.config/fish && cp -R ./fish ~/.config/
 
 # for Sierra
 touch ~/.ssh/config
@@ -28,8 +28,9 @@ brew doctor
 
 # nodebrew
 echo "=== Install Nodebrew"
-nodebrew install-binary latest
-nodebrew use latest
+curl -L git.io/nodebrew | perl - setup
+nodebrew install-binary v10
+nodebrew use latest v10
 npm set progress=false # raise performance
 
 echo "=== Setup Mac environment"
