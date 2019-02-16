@@ -20,19 +20,15 @@ brew install wget
 brew install peco
 brew install git
 brew install nodebrew
-brew install rbenv
-brew install nodenv
-brew tap dart-lang/dart
-brew install dart
 
 brew install caskroom/cask/brew-cask
 brew cask install google-chrome
+brew cask install google-chrome-canary
+brew cask install firefoxdeveloperedition
 brew cask install google-japanese-ime
-brew cask install sourcetree
 brew cask install dropbox
 brew cask install skitch
 brew cask install jetbrains-toolbox
 brew cask install visual-studio-code
 brew cask install slack
 brew cask install docker
-brew cask install atom

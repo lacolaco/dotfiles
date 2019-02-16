@@ -10,11 +10,6 @@ set -x LANG "ja_JP.UTF-8"
 
 set -x fish_greeting ""
 
-# Ruby
-
-set -x RBENV_ROOT /usr/local/var/rbenv
-status --is-interactive; and source (rbenv init -|psub)
-
 # Dart
 set -x PATH $PATH ~/.pub-cache/bin
 
@@ -35,10 +30,6 @@ end
 
 function hp
   history | peco
-end
-
-function nex
-  nodenv exec $argv
 end
 
 echo "config.fish is loaded."
