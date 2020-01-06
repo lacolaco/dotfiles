@@ -24,9 +24,10 @@ brew cask install google-chrome
 brew cask install google-chrome-canary
 brew cask install firefox-developer-edition
 brew cask install google-japanese-ime
-brew cask install dropbox
 brew cask install skitch
 brew cask install jetbrains-toolbox
 brew cask install visual-studio-code
 brew cask install slack
 brew cask install docker
+brew cask install lastpass
+brew cask install divvy
