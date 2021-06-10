@@ -491,6 +491,12 @@
         "options": {
           "full_name": "visual-studio-code"
         }
+      },
+      "skitch": {
+        "version": "2.9,265157",
+        "options": {
+          "full_name": "skitch"
+        }
       }
     }
   },
