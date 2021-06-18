@@ -494,6 +494,18 @@
         "options": {
           "full_name": "visual-studio-code"
         }
+      },
+      "divvy": {
+        "version": "1.5.1,581",
+        "options": {
+          "full_name": "divvy"
+        }
+      },
+      "zoom": {
+        "version": "5.6.7.1020",
+        "options": {
+          "full_name": "zoom"
+        }
       }
     }
   },
