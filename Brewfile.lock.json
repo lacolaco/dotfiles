@@ -512,6 +512,12 @@
         "options": {
           "full_name": "mmhmm"
         }
+      },
+      "loopback": {
+        "version": "2.2.3",
+        "options": {
+          "full_name": "loopback"
+        }
       }
     }
   },
