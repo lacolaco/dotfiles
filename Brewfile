@@ -1,5 +1,4 @@
 tap "buildpacks/tap"
-tap "caskroom/cask"
 tap "github/gh"
 tap "homebrew/bundle"
 tap "homebrew/cask"

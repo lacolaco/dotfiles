@@ -1,5 +1,5 @@
 [core]
-	excludesfile = /Users/laco/.gitignore_global
+	excludesfile = /Users/lacolaco/.gitignore_global
 	autocrlf = input
 	editor = code --wait
 [user]
