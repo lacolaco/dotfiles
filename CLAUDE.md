@@ -26,9 +26,6 @@ brew doctor
 
 # 5. Fish shell設定のシンボリックリンク作成 & デフォルトシェル変更
 ./setup_fish.sh
-
-# 6. nodebrew setup (必要に応じて)
-./setup_nodebrew.sh
 ```
 
 ## Architecture
