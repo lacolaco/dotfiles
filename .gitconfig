@@ -5,9 +5,19 @@
 [user]
 	email = suguru.inatomi@gmail.com
 	name = Suguru Inatomi
+	signingkey = /Users/lacolaco/.ssh/id_rsa.pub
 [color]
 	ui = auto
 [url "git@github.com:"]
     # insteadOf = https://github.com/
 [init]
 	defaultBranch = main
+[gpg]
+	format = ssh
+[commit]
+	gpgsign = true
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

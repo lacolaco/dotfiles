@@ -1,3 +1,6 @@
+Include ~/.orbstack/ssh/config
+
 Host *
   UseKeychain yes
   IdentityFile ~/.ssh/id_rsa
+  
