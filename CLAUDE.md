@@ -45,7 +45,7 @@ brew doctor
 ### Fish Shell Configuration Structure
 
 - `fish/config.fish`: メイン設定ファイル
-  - 環境変数 (LANG, VOLTA_HOME, PNPM_HOME等)
+  - 環境変数 (LANG, PNPM_HOME等)
   - direnv/mise integration
   - カスタム関数 (`commit_empty`, `gitco`, `hp`, `p`)
 - `fish/functions/fish_prompt.fish`: プロンプトカスタマイズ
