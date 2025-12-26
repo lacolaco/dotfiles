@@ -77,7 +77,27 @@ brew doctor
 - npm globals: claude-code, gemini-cli, mdtranslator, codex
 - pipx: openhands-ai
 
-Brewfileとmiseで重複管理しないこと。新規ツール追加時は適切な方を選択。
+**Brewfile管理ポリシー:**
+- formulae (brew) とcaskのみ管理
+- vscode拡張、goパッケージ、cargoパッケージは含めない（各ツールで個別管理）
+- Brewfileとmiseで重複管理しないこと
+
+**Brewfile更新:**
+```bash
+# 1. 現在インストール中のパッケージ確認
+brew leaves --installed-on-request
+
+# 2. 不要なパッケージを特定・削除
+brew uninstall <package>
+
+# 3. 不要なtapを削除
+brew untap <tap>
+
+# 4. Brewfileを手動で更新（brew bundle dumpは依存関係も含むため使わない）
+# - brew leavesの結果をベースに記述
+# - vscode/go/cargoエントリは含めない
+# - miseで管理しているツール（gh, node, python等）は含めない
+```
 
 ## Important Notes
 
