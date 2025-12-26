@@ -21,10 +21,13 @@ brew doctor
 # 3. Git設定のシンボリックリンク作成 & SSH鍵生成
 ./setup_git.sh
 
-# 4. Fish shell設定のシンボリックリンク作成 & デフォルトシェル変更
+# 4. mise設定のシンボリックリンク作成 & ツールインストール
+./setup_mise.sh
+
+# 5. Fish shell設定のシンボリックリンク作成 & デフォルトシェル変更
 ./setup_fish.sh
 
-# 5. nodebrew setup (必要に応じて)
+# 6. nodebrew setup (必要に応じて)
 ./setup_nodebrew.sh
 ```
 
@@ -37,6 +40,7 @@ brew doctor
 - `.gitconfig` → `~/.gitconfig`
 - `.gitignore_global` → `~/.gitignore_global`
 - `fish/` → `~/.config/fish`
+- `mise/` → `~/.config/mise`
 - `ssh/config` → `~/.ssh/config`
 
 **重要**: 設定ファイルを編集する場合は、このリポジトリ内のファイルを直接編集すること。ホームディレクトリ内のファイルはシンボリックリンクなので、変更は自動的に反映される。
@@ -59,6 +63,21 @@ brew doctor
 2. pnpm-lock.yaml → pnpm
 3. yarn.lock → yarn
 4. デフォルト → npm
+
+## Tool Management Strategy
+
+### Homebrew vs mise
+
+- **Homebrew**: システムレベルツール、GUIアプリ (cask)、mise自体
+- **mise**: プログラミング言語、CLI開発ツール (gh, glab, deno等)
+
+**mise管理ツール (mise/config.toml)**:
+- Languages: node 22, python, go
+- CLI tools: gh, glab, deno, watchexec, ollama
+- npm globals: claude-code, gemini-cli, mdtranslator, codex
+- pipx: openhands-ai
+
+Brewfileとmiseで重複管理しないこと。新規ツール追加時は適切な方を選択。
 
 ## Important Notes
 
