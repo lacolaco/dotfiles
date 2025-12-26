@@ -21,6 +21,7 @@ brew "silicon"
 brew "tree"
 brew "wget"
 
+cask "betterdisplay"
 cask "bitwarden"
 cask "deepl"
 cask "discord"
