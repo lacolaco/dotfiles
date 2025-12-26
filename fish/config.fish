@@ -34,8 +34,6 @@ function p
 end
 
 echo "config.fish is loaded."
-set -gx VOLTA_HOME "$HOME/.volta"
-set -gx PATH "$VOLTA_HOME/bin" $PATH
 
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.
