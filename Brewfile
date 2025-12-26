@@ -23,6 +23,7 @@ brew "wget"
 
 cask "betterdisplay"
 cask "bitwarden"
+cask "cleanshot"
 cask "deepl"
 cask "discord"
 cask "divvy"
