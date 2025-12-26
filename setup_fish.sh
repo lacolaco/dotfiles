@@ -6,7 +6,6 @@ fish_config_dir="$(pwd)/fish"
 ln -sf ${fish_config_dir} ~/.config/fish
 
 fish -c "fish_add_path /opt/homebrew/bin"
-fish -c "fish_add_path ~/.nodebrew/current/bin"
 
 echo "=== change default shell to fish"
 
