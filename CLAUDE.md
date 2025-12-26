@@ -104,4 +104,4 @@ brew untap <tap>
 - Git commits are signed with SSH keys (gpg.format = ssh)
 - Default branch is `main` (init.defaultBranch)
 - VSCode is configured as default Git editor
-- このリポジトリ自体のmasterブランチがメインブランチ
+- Brewfile.lock.jsonは使用しない（個人用dotfilesのため）
