@@ -21,6 +21,8 @@ if ! gh auth status &>/dev/null; then
   gh auth login
 fi
 
+gh auth refresh -h github.com -s admin:public_key -s admin:ssh_signing_key
+
 echo "=== Register SSH key to GitHub"
 
 gh ssh-key add ~/.ssh/id_ed25519.pub --type authentication --title "ed25519-auth-key-$(date +%Y%m%d)"
