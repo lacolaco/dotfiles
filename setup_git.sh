@@ -7,11 +7,13 @@ ln -sf "$(pwd)/.gitignore_global" ~/
 
 echo "=== Generate SSH key"
 
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
 ln -sf "$(pwd)/ssh/config" ~/.ssh/config
 
-ssh-keygen
-cat ~/.ssh/id_rsa.pub
-cat ~/.ssh/id_rsa.pub | pbcopy
+ssh-keygen -t ed25519
+cat ~/.ssh/id_ed25519.pub
+cat ~/.ssh/id_ed25519.pub | pbcopy
 echo "Register your SSH key for GitHub"
 
 open -a "Google Chrome" "https://github.com/settings/keys"
