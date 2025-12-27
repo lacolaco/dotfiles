@@ -2,6 +2,8 @@
 
 echo "=== setup git"
 
+eval "$(mise activate zsh)"
+
 ln -sf "$(pwd)/.gitconfig" ~/
 ln -sf "$(pwd)/.gitignore_global" ~/
 
