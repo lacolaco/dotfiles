@@ -18,11 +18,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 brew bundle install
 brew doctor
 
-# 3. Git設定のシンボリックリンク作成 & SSH鍵生成
-./setup_git.sh
-
-# 4. mise設定のシンボリックリンク作成 & ツールインストール
+# 3. mise設定のシンボリックリンク作成 & ツールインストール (ghコマンドが必要なため先に実行)
 ./setup_mise.sh
+
+# 4. Git設定のシンボリックリンク作成 & SSH鍵生成 & GitHub登録
+./setup_git.sh
 
 # 5. Fish shell設定のシンボリックリンク作成 & デフォルトシェル変更
 ./setup_fish.sh
