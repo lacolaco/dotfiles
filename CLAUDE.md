@@ -25,6 +25,7 @@ Homebrewとmiseで同じツールを管理しない：
 .gitconfig → ~/.gitconfig
 .gitignore_global → ~/.gitignore_global
 fish/ → ~/.config/fish
+karabiner/ → ~/.config/karabiner
 mise/ → ~/.config/mise
 omf/ → ~/.config/omf
 ssh/config → ~/.ssh/config
@@ -63,16 +64,19 @@ ssh/config → ~/.ssh/config
 brew bundle install
 brew doctor
 
-# 3. mise設定（ghコマンドが必要なため先に実行）
+# 3. Karabiner-Elements設定（symlinkを先に作成してから起動）
+ln -sf $(pwd)/karabiner ~/.config/karabiner
+
+# 4. mise設定（ghコマンドが必要なため先に実行）
 ./setup_mise.sh
 
-# 4. Git設定 + SSH鍵生成/GitHub登録
+# 5. Git設定 + SSH鍵生成/GitHub登録
 ./setup_git.sh
 
-# 5. Fish設定
+# 6. Fish設定
 ./setup_fish.sh
 
-# 6. Dock設定（オプション: スクリプト編集で好みのアプリを指定）
+# 7. Dock設定（オプション: スクリプト編集で好みのアプリを指定）
 ./setup_dock.sh
 ```
 
