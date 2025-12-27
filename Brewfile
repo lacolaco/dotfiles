@@ -1,6 +1,4 @@
 tap "aquaproj/aqua"
-tap "homebrew/bundle"
-tap "homebrew/cask-versions"
 
 brew "aqua"
 brew "coreutils"
