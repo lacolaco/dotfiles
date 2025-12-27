@@ -79,15 +79,15 @@ brew doctor
 ### Brewfile更新
 
 ```bash
-# 1. 現在インストール中のパッケージ確認
-brew leaves --installed-on-request
+# 1. 現在の状態を確認（mise管理ツールに注釈付き）
+./update_brewfile.sh
 
 # 2. 不要なパッケージ・tapを削除
 brew uninstall <package>
 brew untap <tap>
 
 # 3. Brewfileを手動更新
-# - brew leavesの結果を基に記述
+# - update_brewfile.shの出力を基に記述
 # - mise管理ツール（gh, node, python等）は除外
 # - VSCode/go/cargoエントリは除外
 ```
