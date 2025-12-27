@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 新規環境セットアップ時は順次実行:
 
 ```bash
-# 1. Homebrew installation & Finder設定
+# 1. Homebrew installation & Rosetta 2 installation & Finder設定
 ./init.sh
 
 # 2. パッケージインストール (Homebrewインストール後、PATHに追加してから)
@@ -102,3 +102,5 @@ brew untap <tap>
 - Default branch is `main` (init.defaultBranch)
 - VSCode is configured as default Git editor
 - Brewfile.lock.jsonは使用しない（個人用dotfilesのため）
+- **Rosetta 2**: init.shで自動インストール（google-japanese-ime等のIntel版アプリ用）
+- **google-japanese-ime**: Apple Siliconネイティブ非対応（Intel版のみ）。2027年macOS 28でRosetta 2削除予定のため、将来的に代替IMEへの移行が必要
