@@ -2,6 +2,7 @@
 
 echo "=== setup fish shell"
 
+mkdir -p ~/.config
 fish_config_dir="$(pwd)/fish"
 ln -sf ${fish_config_dir} ~/.config/fish
 
