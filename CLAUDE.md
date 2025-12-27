@@ -1,106 +1,147 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+macOS開発環境セットアップ用dotfilesリポジトリ。Symlink方式で設定を管理。
 
-## Overview
+## Critical Rules
 
-個人のdotfilesリポジトリ。macOS開発環境のセットアップスクリプトと設定ファイルを管理する。
+### Symlink編集の絶対ルール
+このリポジトリ内のファイルを直接編集すること。`~/.gitconfig`などホームディレクトリ内のファイルはsymlinkのため、編集してはならない。
 
-## Setup Commands
+### 重複管理の禁止
+Homebrewとmiseで同じツールを管理しない：
+- **Homebrew**: システムツール、GUIアプリ、mise本体
+- **mise**: プログラミング言語、CLI開発ツール
 
-新規環境セットアップ時は順次実行:
+### Brewfile管理ポリシー
+- `brew`と`cask`のみ記述
+- VSCode拡張、go/cargoパッケージは含めない
+- `brew bundle dump`は使わない（依存関係まで含むため）
+- `brew leaves --installed-on-request`を基準に手動管理
+
+## Repository Structure
+
+### Symlink Mappings
+```
+.gitconfig → ~/.gitconfig
+.gitignore_global → ~/.gitignore_global
+fish/ → ~/.config/fish
+mise/ → ~/.config/mise
+omf/ → ~/.config/omf
+ssh/config → ~/.ssh/config
+```
+
+### Setup Scripts
+1. `init.sh`: Homebrew + Rosetta 2インストール、Finder設定
+2. `setup_mise.sh`: mise設定 + ツールインストール
+3. `setup_git.sh`: Git設定 + SSH鍵生成/GitHub登録（`gh`必要）
+4. `setup_fish.sh`: Fish設定 + デフォルトシェル変更 + Oh-my-fish
+5. `setup_dock.sh`: Dock完全クリア + 必要アプリ配置（カスタマイズ可能）
+
+### Tool Management
+**Homebrew** (Brewfile):
+- システムツール: git, fish, docker, direnv, jq等
+- GUIアプリ: VSCode, Chrome, Slack等
+- aqua, mise本体
+
+**mise** (mise/config.toml):
+- 言語: node, python, go, deno
+- CLIツール: gh, glab, watchexec
+- npm globals: claude-code, gemini-cli等
+- aqua経由: pinact
+- go経由: deck
+- ubi経由: glab
+
+## Operations
+
+### 新規環境セットアップ
 
 ```bash
-# 1. Homebrew installation & Rosetta 2 installation & Finder設定
+# 1. Homebrew + Rosetta 2インストール
 ./init.sh
 
-# 2. パッケージインストール (Homebrewインストール後、PATHに追加してから)
+# 2. PATHにHomebrewを追加後、パッケージインストール
 brew bundle install
 brew doctor
 
-# 3. mise設定のシンボリックリンク作成 & ツールインストール (ghコマンドが必要なため先に実行)
+# 3. mise設定（ghコマンドが必要なため先に実行）
 ./setup_mise.sh
 
-# 4. Git設定のシンボリックリンク作成 & SSH鍵生成 & GitHub登録
+# 4. Git設定 + SSH鍵生成/GitHub登録
 ./setup_git.sh
 
-# 5. Fish shell設定のシンボリックリンク作成 & デフォルトシェル変更
+# 5. Fish設定
 ./setup_fish.sh
+
+# 6. Dock設定（オプション: スクリプト編集で好みのアプリを指定）
+./setup_dock.sh
 ```
 
-## Architecture
+### Brewfile更新
 
-### Symlink-based Configuration Management
-
-このリポジトリの設定ファイルはホームディレクトリにシンボリックリンクを作成して使用される:
-
-- `.gitconfig` → `~/.gitconfig`
-- `.gitignore_global` → `~/.gitignore_global`
-- `fish/` → `~/.config/fish`
-- `mise/` → `~/.config/mise`
-- `ssh/config` → `~/.ssh/config`
-
-**重要**: 設定ファイルを編集する場合は、このリポジトリ内のファイルを直接編集すること。ホームディレクトリ内のファイルはシンボリックリンクなので、変更は自動的に反映される。
-
-### Fish Shell Configuration Structure
-
-- `fish/config.fish`: メイン設定ファイル
-  - 環境変数 (LANG, PNPM_HOME等)
-  - direnv/mise integration
-  - カスタム関数 (`commit_empty`, `gitco`, `hp`, `p`)
-- `fish/functions/fish_prompt.fish`: プロンプトカスタマイズ
-- `fish/completions/`: 補完スクリプト
-- `fish/conf.d/`: 追加設定ディレクトリ
-
-### Package Manager Detection Logic
-
-`p` function (fish/config.fish:24-34)は以下の優先順位でパッケージマネージャーを自動検出:
-
-1. bun.lockb → bun
-2. pnpm-lock.yaml → pnpm
-3. yarn.lock → yarn
-4. デフォルト → npm
-
-## Tool Management Strategy
-
-### Homebrew vs mise
-
-- **Homebrew**: システムレベルツール、GUIアプリ (cask)、mise自体
-- **mise**: プログラミング言語、CLI開発ツール (gh, glab, deno等)
-
-**mise管理ツール (mise/config.toml)**:
-- Languages: node 22, python, go
-- CLI tools: gh, glab, deno, watchexec, ollama
-- npm globals: claude-code, gemini-cli, mdtranslator, codex
-- pipx: openhands-ai
-
-**Brewfile管理ポリシー:**
-- formulae (brew) とcaskのみ管理
-- vscode拡張、goパッケージ、cargoパッケージは含めない（各ツールで個別管理）
-- Brewfileとmiseで重複管理しないこと
-
-**Brewfile更新:**
 ```bash
 # 1. 現在インストール中のパッケージ確認
 brew leaves --installed-on-request
 
-# 2. 不要なパッケージを特定・削除
+# 2. 不要なパッケージ・tapを削除
 brew uninstall <package>
-
-# 3. 不要なtapを削除
 brew untap <tap>
 
-# 4. Brewfileを手動で更新（brew bundle dumpは依存関係も含むため使わない）
-# - brew leavesの結果をベースに記述
-# - vscode/go/cargoエントリは含めない
-# - miseで管理しているツール（gh, node, python等）は含めない
+# 3. Brewfileを手動更新
+# - brew leavesの結果を基に記述
+# - mise管理ツール（gh, node, python等）は除外
+# - VSCode/go/cargoエントリは除外
 ```
 
-## Important Notes
+### Troubleshooting
 
-- Git commits are signed with SSH keys (gpg.format = ssh)
-- Default branch is `main` (init.defaultBranch)
-- VSCode is configured as default Git editor
-- Brewfile.lock.jsonは使用しない（個人用dotfilesのため）
-- **Rosetta 2**: init.shで自動インストール（google-japanese-ime等のIntel版アプリ用）
-- **google-japanese-ime**: Apple Siliconネイティブ非対応（Intel版のみ）。2027年macOS 28でRosetta 2削除予定のため、将来的に代替IMEへの移行が必要
+**Symlink conflict**:
+```bash
+# 既存ファイルが存在する場合、バックアップして削除
+mv ~/.gitconfig ~/.gitconfig.backup
+ln -sf $(pwd)/.gitconfig ~/
+```
+
+**mise install失敗**:
+```bash
+# mise自体を再インストール
+brew reinstall mise
+
+# 個別ツール再インストール
+mise install <tool>@<version>
+```
+
+**GitHub CLI認証エラー**:
+```bash
+# 認証を再実行（admin:public_key, admin:ssh_signing_key scopesが必要）
+gh auth refresh -h github.com -s admin:public_key -s admin:ssh_signing_key
+```
+
+## Technical Reference
+
+### Git Configuration
+- コミット署名: SSH鍵使用 (`gpg.format = ssh`)
+- デフォルトブランチ: `main`
+- エディタ: VSCode
+
+### Fish Shell
+- **設定ファイル**: `fish/config.fish`
+  - 環境変数 (LANG, PNPM_HOME等)
+  - direnv/mise integration
+  - カスタム関数: `commit_empty`, `gitco`, `hp`, `p`
+- **プロンプト**: `fish/functions/fish_prompt.fish`
+- **Oh-my-fish**: テーマ・プラグイン管理
+
+### Package Manager Auto-detection
+`p` function: lockfileを検出して自動選択
+1. `bun.lockb` → bun
+2. `pnpm-lock.yaml` → pnpm
+3. `yarn.lock` → yarn
+4. デフォルト → npm
+
+### Platform Constraints
+- **Rosetta 2**: Intel版アプリ用（google-japanese-ime等）
+  - macOS 28（2027年）でサポート終了予定
+- **google-japanese-ime**: Apple Siliconネイティブ非対応
+
+### Excluded from Version Control
+- `Brewfile.lock.json`: 個人用dotfilesのため不使用
