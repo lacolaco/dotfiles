@@ -19,3 +19,8 @@ echo "=== install Oh-my-fish"
 omf_config_dir="$(pwd)/omf"
 ln -sf ${omf_config_dir} ~/.config/omf
 curl -L https://get.oh-my.fish | fish
+
+echo "=== generate shell completions"
+
+eval "$(mise activate zsh)"
+gh completion -s fish > ${fish_config_dir}/completions/gh.fish
