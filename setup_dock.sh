@@ -10,14 +10,18 @@ dockutil --remove all --no-restart
 
 # Development
 dockutil --add "/Applications/Visual Studio Code.app" --no-restart
+dockutil --add "/Applications/Figma.app" --no-restart
 
 # Browsers
 dockutil --add "/Applications/Google Chrome.app" --no-restart
+dockutil --add "/Applications/Firefox.app" --no-restart
 
 # Communication
 dockutil --add "/Applications/Slack.app" --no-restart
+dockutil --add "/Applications/Discord.app" --no-restart
 
 # Utilities
+dockutil --add "/System/Applications/System Settings.app" --no-restart
 dockutil --add "/System/Applications/Utilities/Terminal.app" --no-restart
 
 # Add more apps as needed:
