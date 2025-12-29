@@ -13,6 +13,7 @@ python = "latest"
 uv = "latest"
 watchexec = "latest"
 "ubi:gitlab-org/cli" = { version = "latest", exe = "glab", provider = "gitlab" }
+pnpm = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
