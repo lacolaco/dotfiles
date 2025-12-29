@@ -29,6 +29,10 @@ karabiner/ → ~/.config/karabiner
 mise/ → ~/.config/mise
 omf/ → ~/.config/omf
 ssh/config → ~/.ssh/config
+claude/CLAUDE.md → ~/.claude/CLAUDE.md
+claude/settings.json → ~/.claude/settings.json
+claude/agents/ → ~/.claude/agents
+claude/commands/ → ~/.claude/commands
 ```
 
 ### Setup Scripts
@@ -37,6 +41,7 @@ ssh/config → ~/.ssh/config
 3. `setup_git.sh`: Git設定 + SSH鍵生成/GitHub登録（`gh`必要）
 4. `setup_fish.sh`: Fish設定 + デフォルトシェル変更 + Oh-my-fish
 5. `setup_dock.sh`: Dock完全クリア + 必要アプリ配置（カスタマイズ可能）
+6. `setup_claude.sh`: Claude Code設定 + カスタムコマンド/エージェント
 
 ### Tool Management
 **Homebrew** (Brewfile):
@@ -73,10 +78,13 @@ ln -sf $(pwd)/karabiner ~/.config/karabiner
 # 5. Git設定 + SSH鍵生成/GitHub登録
 ./setup_git.sh
 
-# 6. Fish設定
+# 6. Claude Code設定（カスタムコマンド・エージェント）
+./setup_claude.sh
+
+# 7. Fish設定
 ./setup_fish.sh
 
-# 7. Dock設定（オプション: スクリプト編集で好みのアプリを指定）
+# 8. Dock設定（オプション: スクリプト編集で好みのアプリを指定）
 ./setup_dock.sh
 ```
 
