@@ -118,6 +118,21 @@ Execute plan. Log steps in detail.
 
 ---
 
+## Tool Dependency Management
+
+**mise**: Development tools and language runtimes
+- **Manages**: Programming languages (node, python, go, deno), CLI dev tools (gh, glab, watchexec)
+- **Config**: `~/.config/mise/config.toml`
+- **When to use**: Language versions, project-specific tools, npm globals
+
+**Homebrew**: System tools and GUI applications
+- **Manages**: System utilities (git, fish, jq), GUI apps (VSCode, Chrome), mise itself
+- **When to use**: OS-level tools, applications with .app bundles
+
+**Rule**: Never manage the same tool with both. Check mise first for dev tools, Homebrew for system/GUI.
+
+---
+
 ## Communication Prefixes
 
 Format: `{TYPE}: message`
