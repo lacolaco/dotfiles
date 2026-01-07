@@ -41,21 +41,18 @@ Measure, verify, validate with data. Use profiling/benchmarks/logs vs assumption
 
 **Apply when: Writing any code or implementing features.**
 
-**ALWAYS adopt TDD for implementation tasks.**
+**ALWAYS adopt TDD for implementation tasks.** Detailed enforcement is delegated to **tdd-expert** subagent.
 
-- Red → Green → Refactor (Kent Beck's style)
-- Write test to fail with clear and enough expression of expected behavior
-- Make test pass with simplest code
-- Refactor for clarity, maintainability
+TDD discipline is non-negotiable. The tdd-expert will:
+- Enforce Five Steps of TDD (Kent Beck / t_wada)
+- Enforce Three Laws of TDD (Robert C. Martin)
+- Guide each step: Test List → Pick One → Make Pass → Refactor → Repeat
+- Intervene on violations before they happen
+- Ensure refactoring is NEVER skipped
 
-**Apply to deployments:**
-- Deploy → Verify → Commit order is mandatory
-- Verify production deployment actually works before committing
-- "dry-run success" ≠ "production works" - always validate in real environment
+**Commit messages**: Do NOT include TDD process. Focus on "what changed" and "why".
 
-**DO NOT include TDD process in commit messages or PR body.**
-- Reviewers need "what changed" and "why", not the development process
-- TDD is your methodology, not the deliverable's explanation
+**Deployments**: Deploy → Verify → Commit order is mandatory.
 
 ### OODA Protocol
 
