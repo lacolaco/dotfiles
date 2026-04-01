@@ -58,7 +58,7 @@ claude/skills/ → ~/.claude/skills
 **mise** (mise/config.toml):
 - 言語: node, python, go, deno
 - CLIツール: gh, glab, watchexec
-- npm globals: claude-code, gemini-cli等
+- npm globals: claude-code等
 - aqua経由: pinact
 - go経由: deck
 - ubi経由: glab
