@@ -1,7 +1,7 @@
 ---
 name: pr
 description: "PRのライフサイクル全体をゲート付きで管理する。PR作成、レビュー対応、マージ、ポストマージまでの一連のワークフローを強制する。PRを作りたい、レビュー対応したい、マージしたい、といった場面で使用する。"
-user-invokable: true
+user-invocable: true
 allowed-tools: "Bash(git:*), Bash(gh:*), Bash(glab:*)"
 ---
 
