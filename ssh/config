@@ -1,6 +1,10 @@
 Include ~/.orbstack/ssh/config
 
+Host monitor-pi.local
+  HostName monitor-pi.local
+  User pi
+  ForwardAgent yes
+
 Host *
   UseKeychain yes
   IdentityFile ~/.ssh/id_rsa
-  

@@ -1,10 +1,63 @@
 {
-  "includeCoAuthoredBy": false,
-  "alwaysThinkingEnabled": true,
-  "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true
-  },
   "env": {
-    "ENABLE_TOOL_SEARCH": "true"
+    "ENABLE_TOOL_SEARCH": "1",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "includeCoAuthoredBy": true,
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "example-skills@anthropic-agent-skills": true
+  },
+  "language": "Japanese",
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "autoMemoryEnabled": false,
+  "permissions": {
+    "allow": [
+      "Bash(git check-ignore:*)",
+      "Bash(brew info:*)",
+      "WebFetch(domain:karabiner-elements.pqrs.org)",
+      "WebSearch",
+      "WebFetch(domain:t-wada.hatenablog.jp)",
+      "WebFetch(domain:levtech.jp)",
+      "WebFetch(domain:agilejourney.uzabase.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(git wt --help:*)",
+      "Bash(git-wt:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)"
+    ],
+    "deny": [
+      "Bash(sh:*)",
+      "Bash(for *)",
+      "Bash(* &)",
+      "Bash(* &&)",
+      "Bash(* && *)",
+      "Bash(* echo \"---\" *)",
+      "Bash(bash:*)",
+      "Bash(cat:*)",
+      "Bash(sed *)",
+      "Bash(find * -exec *)",
+      "Bash(git -C:*)",
+      "Bash(gh api graphql:*)",
+      "Bash(git add -A)",
+      "Bash(git add .)",
+      "Bash(pnpm * -g)",
+      "Bash(gh * --admin)",
+      "Bash(npx vitest:*)",
+      "Bash(pnpm vitest:*)",
+      "Bash(vitest:*)",
+      "Bash(pnpm * --dir)",
+      "Bash(pnpm --dir:*)",
+      "Bash(pnpm * --filter)",
+      "Bash(pnpm --filter:*)",
+      "Bash(pnpm * -F)",
+      "Bash(pnpm -F:*)",
+      "Bash(* | *)",
+      "Bash(* ; *)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill(superpowers:code-reviewer)"
+    ]
   }
 }

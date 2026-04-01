@@ -38,6 +38,7 @@ claude/CLAUDE.md → ~/.claude/CLAUDE.md
 claude/settings.json → ~/.claude/settings.json
 claude/agents/ → ~/.claude/agents
 claude/commands/ → ~/.claude/commands
+claude/skills/ → ~/.claude/skills
 ```
 
 ### Setup Scripts
@@ -46,7 +47,7 @@ claude/commands/ → ~/.claude/commands
 3. `setup_git.sh`: Git設定 + SSH鍵生成/GitHub登録（`gh`必要）
 4. `setup_fish.sh`: Fish設定 + デフォルトシェル変更 + Oh-my-fish
 5. `setup_dock.sh`: Dock完全クリア + 必要アプリ配置（カスタマイズ可能）
-6. `setup_claude.sh`: Claude Code設定 + カスタムコマンド/エージェント
+6. `setup_claude.sh`: Claude Code設定 + コマンド/エージェント/スキル
 
 ### Tool Management
 **Homebrew** (Brewfile):
@@ -75,7 +76,7 @@ brew bundle install
 brew doctor
 
 # 3. Karabiner-Elements設定（symlinkを先に作成してから起動）
-ln -sf $(pwd)/karabiner ~/.config/karabiner
+./setup_karabiner.sh
 
 # 4. mise設定（ghコマンドが必要なため先に実行）
 ./setup_mise.sh

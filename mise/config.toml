@@ -4,12 +4,16 @@ go = "latest"
 "go:github.com/k1LoW/deck/cmd/deck" = "latest"
 node = "22"
 claude-code = "latest"
+"npm:@google/gemini-cli" = "latest"
 "npm:@lacolaco/mdtranslator" = "latest"
 python = "latest"
 uv = "latest"
 watchexec = "latest"
 "ubi:gitlab-org/cli" = { version = "latest", exe = "glab", provider = "gitlab" }
 pnpm = "latest"
+"go:github.com/k1LoW/git-wt" = "latest"
+"npm:@playwright/cli" = "latest"
+claude = "2.1.87"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
