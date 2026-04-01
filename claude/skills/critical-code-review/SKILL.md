@@ -1,7 +1,7 @@
 ---
 name: critical-code-review
 description: "WHEN: PROACTIVELY after completing code changes (feature, refactor, architecture decision)—invoke WITHOUT waiting for user request. INPUT: File paths/directory to review, context about what changed and why. OUTPUT: Prioritized critical issues (correctness, security, over-engineering, systemic problems) with root causes and structural fixes—no style nitpicks."
-user-invokable: true
+user-invocable: true
 context: fork
 agent: code-critic
 ---
