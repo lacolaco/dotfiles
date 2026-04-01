@@ -79,10 +79,6 @@ CLI Tool List:
 - When: Managing GCP resources (compute, storage, APIs, IAM)
 - Ex: `gcloud compute instances list --project=X`
 
-**gemini**: For web_fetch, text generation, retrospective analysis.
-- When: Need web content, complex text generation, or project insights
-- Usage: `gemini --help`
-
 **pinact**: Pinact CLI for pinning GitHub Actions SHA versions.
 - When: Pinning GitHub Actions in workflows
 - Usage: `pinact --help`
