@@ -1,6 +1,5 @@
 [tools]
 "aqua:suzuki-shunsuke/pinact" = "latest"
-deno = "2.3"
 go = "latest"
 "go:github.com/k1LoW/deck/cmd/deck" = "latest"
 node = "22"
