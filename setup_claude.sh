@@ -49,5 +49,6 @@ link_file "${claude_dir}/settings.json" ~/.claude/settings.json
 # サブディレクトリをsymlink
 link_dir "${claude_dir}/agents" ~/.claude/agents
 link_dir "${claude_dir}/commands" ~/.claude/commands
+link_dir "${claude_dir}/skills" ~/.claude/skills
 
 echo "=== Claude Code configuration symlinked"

@@ -33,6 +33,9 @@ function p
   end
 end
 
+# setup git-wt https://github.com/k1LoW/git-wt
+git wt --init fish | source
+
 echo "config.fish is loaded."
 
 # Added by OrbStack: command-line tools and integration
@@ -45,6 +48,9 @@ if not string match -q -- $PNPM_HOME $PATH
   set -gx PATH "$PNPM_HOME" $PATH
 end
 # pnpm end
+
+# Added by Antigravity
+fish_add_path /Users/lacolaco/.antigravity/antigravity/bin
 
 # Added by Antigravity
 fish_add_path /Users/lacolaco/.antigravity/antigravity/bin
