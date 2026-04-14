@@ -4,24 +4,11 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "includeCoAuthoredBy": true,
-  "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true,
-    "example-skills@anthropic-agent-skills": true
-  },
-  "language": "Japanese",
-  "alwaysThinkingEnabled": true,
-  "effortLevel": "high",
-  "autoMemoryEnabled": false,
   "permissions": {
     "allow": [
       "Bash(git check-ignore:*)",
       "Bash(brew info:*)",
-      "WebFetch(domain:karabiner-elements.pqrs.org)",
       "WebSearch",
-      "WebFetch(domain:t-wada.hatenablog.jp)",
-      "WebFetch(domain:levtech.jp)",
-      "WebFetch(domain:agilejourney.uzabase.com)",
-      "WebFetch(domain:github.com)",
       "Bash(git wt --help:*)",
       "Bash(git-wt:*)",
       "Bash(head:*)",
@@ -43,6 +30,7 @@
       "Bash(git add -A)",
       "Bash(git add .)",
       "Bash(pnpm * -g)",
+      "Bash(gh pr merge * --delete-branch*)",
       "Bash(gh * --admin)",
       "Bash(npx vitest:*)",
       "Bash(pnpm vitest:*)",
@@ -58,6 +46,18 @@
       "Skill(superpowers:writing-plans)",
       "Skill(superpowers:subagent-driven-development)",
       "Skill(superpowers:code-reviewer)"
+    ],
+    "ask": [
+      "Bash(gh pr merge *)"
     ]
-  }
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "example-skills@anthropic-agent-skills": true,
+    "session-handover@lacolaco-plugins": true
+  },
+  "language": "Japanese",
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "autoMemoryEnabled": false
 }
