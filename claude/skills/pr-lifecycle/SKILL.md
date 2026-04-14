@@ -61,16 +61,16 @@ git push origin <branch-name>
 
 PR TEMPLATEの確認（`.github/PULL_REQUEST_TEMPLATE.md`、`.github/pull_request_template.md`、`docs/pull_request_template.md`等）。存在すればテンプレートに従ってPR本文を作成する。
 
-PR本文を`.git/pr-body.md`に書き出し、`--body-file`で入力する。このファイルはgit管理外のため安全。
+PR本文を`.pr-body.md`（workspace内一時ファイル）に書き出し、`--body-file`で入力する。使用後に削除する。
 
-Write toolで`.git/pr-body.md`にPR本文を書き出す。
+Write toolで`.pr-body.md`にPR本文を書き出す。
 
 ```bash
-gh pr create --base main --title "<title>" --body-file .git/pr-body.md
+gh pr create --base main --title "<title>" --body-file .pr-body.md
 ```
 
 ```bash
-rm .git/pr-body.md
+rm .pr-body.md
 ```
 
 ## Phase 2: Review（レビュー対応）
