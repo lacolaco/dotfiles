@@ -32,7 +32,6 @@ Homebrewとmiseで同じツールを管理しない：
 fish/ → ~/.config/fish
 karabiner/ → ~/.config/karabiner
 mise/ → ~/.config/mise
-omf/ → ~/.config/omf
 ssh/config → ~/.ssh/config
 claude/CLAUDE.md → ~/.claude/CLAUDE.md
 claude/settings.json → ~/.claude/settings.json
@@ -45,7 +44,7 @@ claude/skills/ → ~/.claude/skills
 1. `init.sh`: Homebrew + Rosetta 2インストール、Finder設定
 2. `setup_mise.sh`: mise設定 + ツールインストール
 3. `setup_git.sh`: Git設定 + SSH鍵生成/GitHub登録（`gh`必要）
-4. `setup_fish.sh`: Fish設定 + デフォルトシェル変更 + Oh-my-fish
+4. `setup_fish.sh`: Fish設定 + デフォルトシェル変更 + Fisher
 5. `setup_dock.sh`: Dock完全クリア + 必要アプリ配置（カスタマイズ可能）
 6. `setup_claude.sh`: Claude Code設定 + コマンド/エージェント/スキル
 
@@ -147,7 +146,8 @@ gh auth refresh -h github.com -s admin:public_key -s admin:ssh_signing_key
   - direnv/mise integration
   - カスタム関数: `commit_empty`, `gitco`, `hp`, `p`
 - **プロンプト**: `fish/functions/fish_prompt.fish`
-- **Oh-my-fish**: テーマ・プラグイン管理
+- **Fisher**: プラグイン管理（`fish/fish_plugins`でプラグインリスト管理）
+  - bass: Bash互換ユーティリティ
 
 ### Package Manager Auto-detection
 `p` function: lockfileを検出して自動選択

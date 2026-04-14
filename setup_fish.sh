@@ -32,11 +32,14 @@ fish_location=$(which fish)
 sudo sh -c "echo ${fish_location} >> /etc/shells"
 chsh -s ${fish_location}
 
-echo "=== install Oh-my-fish"
+echo "=== clean up legacy omf symlink"
 
-omf_config_dir="$(pwd)/omf"
-link_dir "${omf_config_dir}" ~/.config/omf
-curl -L https://get.oh-my.fish | fish
+[ -L ~/.config/omf ] && rm ~/.config/omf
+
+echo "=== install Fisher + plugins"
+
+# Fisher v4.4.8 (pinned by commit hash)
+fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/a04308be92daa6cfecdbb0ca58b1e8508664cff2/functions/fisher.fish | source && fisher update"
 
 echo "=== generate shell completions"
 
