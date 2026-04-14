@@ -11,7 +11,7 @@ watchexec = "latest"
 pnpm = "latest"
 "go:github.com/k1LoW/git-wt" = "latest"
 "npm:@playwright/cli" = "latest"
-claude = "2.1.87"
+sentry = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]

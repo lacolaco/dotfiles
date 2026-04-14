@@ -54,3 +54,6 @@ fish_add_path /Users/lacolaco/.antigravity/antigravity/bin
 
 # Added by Antigravity
 fish_add_path /Users/lacolaco/.antigravity/antigravity/bin
+
+# sentry
+fish_add_path "/Users/lacolaco/.sentry/bin"
