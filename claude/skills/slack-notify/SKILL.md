@@ -2,7 +2,7 @@
 name: slack-notify
 description: "作業完了時にSlackのIncoming Webhookで完了報告を送る。環境変数CLAUDE_SLACK_NOTIFY_WEBHOOK_URLが未設定なら何もしない。「Slack通知」「完了報告」で発動。"
 user-invocable: true
-allowed-tools: "Bash(curl:*)"
+allowed-tools: "Bash(~/.claude/skills/slack-notify/send.sh:*)"
 ---
 
 # Slack Notify
@@ -33,15 +33,13 @@ allowed-tools: "Bash(curl:*)"
 
 ### 4. メッセージ送信
 
-`jq -n` でJSONを組み立て、`curl` で送信する。
+スキルディレクトリ内の `send.sh` を使って送信する。
 
 ```bash
-jq -n --arg text "$MESSAGE" '{"text": $text}' | \
-  curl -s -o /dev/null -w "%{http_code}" -X POST "$CLAUDE_SLACK_NOTIFY_WEBHOOK_URL" \
-    -H "Content-Type: application/json" -d @-
+~/.claude/skills/slack-notify/send.sh "<組み立てたメッセージ>"
 ```
 
-HTTPステータスコードが200以外の場合のみ、送信失敗をユーザーに報告する。
+送信失敗時（非ゼロ終了）のみ、ユーザーに報告する。
 
 ## 制約
 
