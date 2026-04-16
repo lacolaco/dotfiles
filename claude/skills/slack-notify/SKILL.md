@@ -1,6 +1,6 @@
 ---
 name: slack-notify
-description: "作業完了時にSlackのIncoming Webhookで完了報告を送る。環境変数CLAUDE_SLACK_NOTIFY_WEBHOOK_URLが未設定なら何もしない。「Slack通知」「完了報告」で発動。"
+description: "WHEN: PROACTIVELY after completing a substantial task (PR merge, feature implementation, bug fix, investigation)—invoke WITHOUT waiting for user request. SKIP for trivial/instant tasks (typo fix, single-line change, quick question answer, config tweak). Also invokable manually via /slack-notify. Sends a completion notification to Slack via Incoming Webhook. Does nothing if CLAUDE_SLACK_NOTIFY_WEBHOOK_URL is not set."
 user-invocable: true
 allowed-tools: "Bash(~/.claude/skills/slack-notify/send.sh:*)"
 ---
@@ -27,8 +27,8 @@ allowed-tools: "Bash(~/.claude/skills/slack-notify/send.sh:*)"
 
 ヘッダ行は固定。本文は呼び出しコンテキストに応じて自由に構成する。
 
-- ヘッダ: `:white_check_mark: *Claude Code 作業完了*`
-- 本文: エージェントが状況に応じて構成する（何のタスクが完了したのか、結果がどうだったのかを完結にまとめる）
+- ヘッダ: `@lacolaco 作業完了。`
+- 本文: エージェントが状況に応じて構成する（何のタスクが完了したのかを完結にまとめる。内容や結果には触れない。）
 - 形式: Slack mrkdwn
 
 ### 4. メッセージ送信
