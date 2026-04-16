@@ -2,7 +2,7 @@
 name: slack-notify
 description: "WHEN: PROACTIVELY after completing a substantial task (PR merge, feature implementation, bug fix, investigation)—invoke WITHOUT waiting for user request. SKIP for trivial/instant tasks (typo fix, single-line change, quick question answer, config tweak). Also invokable manually via /slack-notify. Sends a completion notification to Slack via Incoming Webhook. Does nothing if CLAUDE_SLACK_NOTIFY_WEBHOOK_URL is not set."
 user-invocable: true
-allowed-tools: "Bash(~/.claude/skills/slack-notify/send.sh:*)"
+allowed-tools: "Bash(~/.claude/skills/slack-notify/send.sh)"
 ---
 
 # Slack Notify
@@ -19,24 +19,12 @@ allowed-tools: "Bash(~/.claude/skills/slack-notify/send.sh:*)"
 
 `CLAUDE_SLACK_NOTIFY_WEBHOOK_URL` が未設定または空の場合、何もせずに終了する。エラーメッセージもユーザーへの報告も出さない。即座にセッションに戻る。
 
-### 2. 作業内容の要約
+### 2. メッセージ送信
 
-現在のセッションで行った作業を要約する。`$ARGUMENTS` が与えられている場合は、その内容をコンテキストとして使用する。
-
-### 3. メッセージ組み立て
-
-ヘッダ行は固定。本文は呼び出しコンテキストに応じて自由に構成する。
-
-- ヘッダ: `@lacolaco 作業完了。`
-- 本文: エージェントが状況に応じて構成する（何のタスクが完了したのかを完結にまとめる。内容や結果には触れない。）
-- 形式: Slack mrkdwn
-
-### 4. メッセージ送信
-
-スキルディレクトリ内の `send.sh` を使って送信する。
+スキルディレクトリ内の `send.sh` を実行する。メッセージはスクリプト内に固定されている。
 
 ```bash
-~/.claude/skills/slack-notify/send.sh "<組み立てたメッセージ>"
+~/.claude/skills/slack-notify/send.sh
 ```
 
 送信失敗時（非ゼロ終了）のみ、ユーザーに報告する。
