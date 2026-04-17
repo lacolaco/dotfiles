@@ -12,14 +12,14 @@
       "Bash(git wt --help:*)",
       "Bash(git-wt:*)",
       "Bash(head:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Skill(slack-notify)",
+      "Bash(~/.claude/skills/slack-notify/send.sh *)"
     ],
     "deny": [
       "Bash(sh:*)",
       "Bash(for *)",
       "Bash(* &)",
-      "Bash(* &&)",
-      "Bash(* && *)",
       "Bash(* echo \"---\" *)",
       "Bash(bash:*)",
       "Bash(cat:*)",
@@ -41,7 +41,6 @@
       "Bash(pnpm --filter:*)",
       "Bash(pnpm * -F)",
       "Bash(pnpm -F:*)",
-      "Bash(* | *)",
       "Bash(* ; *)",
       "Skill(superpowers:writing-plans)",
       "Skill(superpowers:subagent-driven-development)",
@@ -53,8 +52,35 @@
   },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
-    "example-skills@anthropic-agent-skills": true,
-    "session-handover@lacolaco-plugins": true
+    "session-handover@lacolaco-plugins": true,
+    "protect-main-branch@lacolaco-plugins": true,
+    "example-skills@anthropic-agent-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "lacolaco-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "lacolaco/claude-plugins"
+      }
+    },
+    "anthropic-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/skills"
+      }
+    }
+  },
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "terminal-notifier -message '承認待ちです' -title 'Claude Code' -activate \"${__CFBundleIdentifier:-com.apple.Terminal}\""
+          }
+        ]
+      }
+    ]
   },
   "language": "Japanese",
   "alwaysThinkingEnabled": true,

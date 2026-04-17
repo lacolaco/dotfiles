@@ -18,6 +18,7 @@ brew "mise"
 brew "openjdk"
 brew "peco"
 brew "silicon"
+brew "terminal-notifier"
 brew "tree"
 brew "wget"
 
