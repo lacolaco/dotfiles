@@ -27,6 +27,14 @@
       "Bash(find * -exec *)",
       "Bash(git -C:*)",
       "Bash(gh api graphql:*)",
+      "Bash(gh api -X PUT*)",
+      "Bash(gh api -X POST*)",
+      "Bash(gh api -X DELETE*)",
+      "Bash(gh api -X PATCH*)",
+      "Bash(gh api --method PUT*)",
+      "Bash(gh api --method POST*)",
+      "Bash(gh api --method DELETE*)",
+      "Bash(gh api --method PATCH*)",
       "Bash(git add -A)",
       "Bash(git add .)",
       "Bash(pnpm * -g)",
@@ -85,5 +93,6 @@
   "language": "Japanese",
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
-  "autoMemoryEnabled": false
+  "autoMemoryEnabled": false,
+  "skipAutoPermissionPrompt": true
 }
