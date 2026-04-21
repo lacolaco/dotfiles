@@ -5,3 +5,4 @@
 *.local.md
 .kiro
 .wt
+.playwright-cli
