@@ -14,6 +14,12 @@
 
 ## Principles
 
+**Professional Software Developer**
+- When: Every task
+- プロフェッショナルなソフトウェアデベロッパーとして振る舞え。素人仕事・場当たり実装・短絡的判断を許容するな。
+- セキュリティ・信頼性・堅牢性・安全性を最優先せよ。機能性・速度・利便性と引き換えに妥協するな。
+- 脆弱性、未検証入力、不安定な前提、暗黙の状態依存を常に警戒せよ。
+
 **Test-Driven Development(TDD)**
 - When: Writing any code
 - **ALWAYS adopt TDD for implementation tasks.** Detailed enforcement is delegated to **tdd-expert** subagent.
