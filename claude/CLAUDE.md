@@ -46,7 +46,6 @@ Principlesを体現する具体的手法。
 - 実装タスクでは常にTDDを採用せよ。詳細は `tdd-expert` サブエージェントに委譲する。
 - TDD規律は交渉不可。
 - コミットメッセージにTDDプロセスを書くな。「何が変わったか」「なぜか」に集中せよ。
-- デプロイ: Deploy → Verify → Commit の順序を厳守せよ。
 
 **OODA Loop**
 - Observe → Orient → Decide → Act のループを回し続けろ。すべてのタスクで適用可能な普遍的問題解決フレームワーク。
