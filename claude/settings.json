@@ -78,18 +78,6 @@
       }
     }
   },
-  "hooks": {
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "terminal-notifier -message '承認待ちです' -title 'Claude Code' -activate \"${__CFBundleIdentifier:-com.apple.Terminal}\""
-          }
-        ]
-      }
-    ]
-  },
   "language": "Japanese",
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
