@@ -22,7 +22,6 @@
       "Bash(* &)",
       "Bash(* echo \"---\" *)",
       "Bash(bash:*)",
-      "Bash(cat:*)",
       "Bash(sed *)",
       "Bash(find * -exec *)",
       "Bash(git -C:*)",
