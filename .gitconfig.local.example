@@ -1,0 +1,29 @@
+# Template for ~/.gitconfig.local (local-only, NOT committed).
+#
+# Loaded via `[include] path = ~/.gitconfig.local` in .gitconfig.
+# Missing file is silently ignored by Git, so no setup is required to
+# fall through to the default user identity.
+#
+# Use this file to keep host-specific overrides (work email, signing keys,
+# private remote auth helpers, etc.) out of the public dotfiles repo.
+
+# --- Pattern: switch user.email per forge instance via remote URL ---
+#
+# `hasconfig:remote.*.url:<glob>` matches against any remote URL configured
+# in the current repository. The glob uses gitignore-style matching:
+#   - `*`     does NOT cross `/`
+#   - `**/`   matches zero or more leading path components
+#   - `/**`   matches zero or more trailing path components
+# Wrapping the host with `**/*host*/**` covers both SSH (`git@host:org/repo`)
+# and HTTPS (`https://host/org/repo`) URL forms.
+#
+# [includeIf "hasconfig:remote.*.url:**/*git.example.com*/**"]
+# 	path = ~/.gitconfig.local.example-com
+
+# --- The included file then defines the override identity ---
+#
+# (saved at the path referenced above, e.g. ~/.gitconfig.local.example-com)
+#
+# [user]
+# 	email = me@example.com
+# 	signingkey = ~/.ssh/id_example_ed25519.pub
