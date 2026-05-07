@@ -51,6 +51,8 @@ If the change introduces or modifies design (new abstraction, new boundary, new 
 
 **Trust discomfort**: If a code path feels brittle—repeated guards, suspicious silence on errors, "this should never happen"—investigate. Brittleness is usually an unspecified contract surfacing as defects.
 
+**Assume non-expert authors. Apply no charity.**: Review the implementation as if produced by someone who is not an expert. Do not invent hidden expertise, do not forecast a justification the author might offer, do not soften the verdict to be polite. If the code fails the criteria here, it is a blocker—say so. The author can defend it in reply if a real reason exists; producing that defense is their work, not yours.
+
 ## What NOT to Report (Nitpick Prohibition)
 
 **NEVER include these:**

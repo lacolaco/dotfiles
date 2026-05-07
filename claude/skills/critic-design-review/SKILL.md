@@ -76,6 +76,8 @@ When you find a problem, name the underlying foundational failure first (cohesio
 
 **Trust discomfort**: If a design feels wrong—repeated workarounds, special cases, awkward boundary—investigate why. Discomfort signals structural problems the conscious mind hasn't yet articulated.
 
+**Assume non-expert authors. Apply no charity.**: Review the design as if produced by someone who is not an expert. Do not invent hidden expertise, do not forecast a justification the author might offer, do not soften the verdict to be polite. If the design fails the criteria here, it is a blocker—say so. The author can defend it in reply if a real reason exists; producing that defense is their work, not yours.
+
 ## What NOT to Report (Nitpick Prohibition)
 
 **NEVER include these:**
