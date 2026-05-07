@@ -15,17 +15,25 @@ All review logic—Review Layering, the foundational lenses (High Cohesion / Loo
 
 ## Procedure
 
-### 1. Gather the agent's required inputs from the user
+### 1. Gather the agent's required inputs
 
-The agent's Invocation Contract requires three items. If the user's invocation already supplies them all (e.g., "review the diff on this branch as a design change for the new auth module"), proceed. If anything is missing, gather it via `AskUserQuestion` before launching—best-effort fill at the entry seam so the agent does not have to refuse and round-trip:
+The agent's Invocation Contract requires four items. Three come from the user; the fourth (workspace root) comes from the host agent's own environment and **must not be left to the agent to infer**.
+
+From the user (gather via `AskUserQuestion` if missing from the invocation):
 
 - **Code under review**: file paths, directory, diff, PR number, or pasted code—each in identifiable scope
 - **Intent of the change**: what the change is supposed to accomplish; for design review, the design intent and the constraints driving the shape; for implementation review, the contract / signature / invariants the implementation must satisfy
 - **Review layer in scope**: `design` / `implementation` / `both` / `unspecified`
 
+From the **host agent's own context** (do not ask the user):
+
+- **Workspace root for persistence**: the absolute path of the Claude Code session's primary working directory. The host agent (the LLM dispatching this skill) knows this from its system context (e.g., the system prompt's "primary working directory" field, or `$HOME`-relative knowledge of the session). If unsure, the host may verify with `Bash`: `pwd` taken at the top level of the host's own session **before** any `cd` into a sub-project, but the host is responsible—not the agent. In a multi-project workspace, the user's intended workspace root may be an ancestor of the review target; the host must distinguish the two and pass the **ancestor**, not the review target.
+
+  Resolve and validate this absolute path **once, in this skill, before launching the agent**. The agent has been observed to mis-resolve workspace root via `pwd`, `$CLAUDE_PROJECT_DIR`, or `git rev-parse --show-toplevel` and create `tmp/` inside a sub-project. The Invocation Contract therefore requires the caller (this skill, via the host agent) to supply the path explicitly; the agent will refuse the call if it is missing.
+
 ### 2. Launch `code-critic` for the initial iteration
 
-Call the `Agent` tool with `subagent_type: code-critic`. Pass the three gathered items in this structure (headings match the agent's Invocation Contract terms verbatim):
+Call the `Agent` tool with `subagent_type: code-critic`. Pass the four gathered items in this structure (headings match the agent's Invocation Contract terms verbatim):
 
 ```
 ## Code under review
@@ -37,6 +45,9 @@ Call the `Agent` tool with `subagent_type: code-critic`. Pass the three gathered
 
 ## Review layer in scope
 design | implementation | both | unspecified
+
+## Workspace root for persistence
+<absolute path of the Claude Code session's primary working directory; the directory under which `tmp/code-critic-<branch-slug>-<rev>.md` will be written>
 ```
 
 Pass a short, identifying `description` such as `Critical review via code-critic`. You may also pass a `name` such as `code-critic-<branch-slug>` so the agent is addressable by stable name in addition to the runtime-assigned ID.
@@ -60,6 +71,9 @@ For each iteration:
 
    ```
    ## Iteration N+1: addresses findings from <prior file path>
+
+   ## Workspace root for persistence
+   <same absolute path passed at initial dispatch — re-sent every iteration so the agent never re-infers it>
 
    ## Changes since prior review
    <what was changed in the code; diff, paths, or summary referencing the prior issues>
