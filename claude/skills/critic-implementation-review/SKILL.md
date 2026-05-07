@@ -22,7 +22,18 @@ If the change introduces or modifies design (new abstraction, new boundary, new 
    - Data integrity: Lost updates, partial writes, transaction boundary errors, write-without-fsync where durability is required, ordering inversions
    - Concrete security bugs: Injection (SQL / shell / HTML / log), auth or authz check missing or wrong at *this* call site, sensitive data exposed in *this* code path, crypto primitives used incorrectly here (e.g., non-constant-time compare on a token, ECB mode, predictable IVs)
    - Resource handling: File / socket / handle / memory leaks, missing cleanup on error paths, unbounded retries or queues, fd exhaustion on hot paths
-   - Error handling: Swallowed errors, fail-open on critical failures (auth / crypto / persistence errors continued past), errors collapsed into a single type that loses caller-vs-supplier ownership, retries on non-idempotent operations
+   - **Error handling and exception swallowing**: hard-to-spot patterns that frequently look "intentional" but silently destroy failure information. Treat **every** match below as a blocker unless an explicit specification, comment-as-contract, or a passing test enforces "this error must be ignored":
+     - Empty catch blocks: `catch (e) {}`, `catch (_) {}`, `except: pass`
+     - Catch blocks that only log and continue: `catch (e) { console.error(e); }` without re-throw or recovery
+     - Catch blocks that return a sentinel (`null` / `false` / default object) and discard the cause—the caller cannot distinguish "no data" from "error"
+     - Catch blocks carrying hedging comments ("ignore", "should not happen", "shouldn't happen", "for now", "TODO", "won't reach here") that have not been removed
+     - Over-broad try/catch wrapping multiple distinct operations so a failure of any one is collapsed into one handler that cannot tell them apart
+     - Re-throw as a generic error losing the cause: `throw new Error("failed")` (or equivalent) instead of preserving the chain (`cause:` / `from e`)
+     - Promise / async swallowing: `.catch(() => {})`, `.catch(_ => null)`, unawaited Promise rejection on non-fire-and-forget code, missing `await` on a fallible call
+     - Fail-open on critical failures (auth / crypto / persistence / authorization errors continued past)
+     - Errors collapsed into a single type that loses caller-vs-supplier ownership (Meyer DbC: a precondition violation absorbed and reported as success is a contract violation)
+     - Retries on non-idempotent operations
+     - **Anti-charity rule**: do **not** lower your bar because a `catch` block looks intentional—deliberate-sounding comments, descriptive variable names, or surrounding "this is fine" framing are not contracts. Unless a specification or a test enforces the swallow, it is a blocker. Charity is the mechanism by which the same swallow gets re-approved every review.
    - Performance on real-sized inputs: Concrete N+1, O(n²) on data sizes that occur in production, hot-path allocations, unnecessary IO inside loops—measure or estimate, do not theorize
    - Contract drift: Implementation does not match its declared signature or stated contract (claims `T`, returns `T | null` on a path; precondition stated in docs but not checked at the boundary; postcondition violated on a corner case)
    - Defensive duplication: Same validation/check repeated at the call site and inside the callee on the same data—often a *symptom* of a contract gap; flag it and consider routing to `critic-design-review`
@@ -107,6 +118,25 @@ For each defect:
 **Cause**: The implementation returns `null` on miss while the type declares `User`. The type signature lies. The duplicated null-checks at the call sites are a symptom of an undeclared null contract.
 **Impact**: Crash on missing user at line 204. Two other sites work only by accident (they happened to add a guard).
 **Fix**: Decide the contract at the design layer. If "missing user" is a valid outcome, change the signature to `User | null` and remove the lie. If not, throw a typed error and remove the call-site null-checks. **This issue likely belongs to `critic-design-review`**—the contract shape is ambiguous, not just one line.
+
+**Example 6 (Exception Swallowing — generic)**:
+**Issue**: `loadUserPreferences(userId)` wraps the persistence call in `try { ... } catch (e) { return DEFAULT_PREFERENCES; }` (line 47). All errors—database connection failure, schema mismatch, deserialization error, real "user not found"—collapse into a silent fall-through to defaults. No log, no re-throw, no typed distinction.
+**Cause**: The catch is over-broad and discards the cause. There is no contract anywhere stating "errors here must be ignored"; the framing was added to "make tests pass" or to "be safe". Anti-charity rule: the deliberate look of the catch is not a specification.
+**Impact**: Outages and bugs are invisible. A schema migration that breaks the loader silently sends every user the default preferences, indistinguishable from a fresh signup. Operators have no signal until users complain. The same shape appears across `loadX` functions in the codebase—the anti-pattern is contagious because review keeps passing it.
+**Fix**:
+```diff
+--- a/src/users/loadUserPreferences.ts
++++ b/src/users/loadUserPreferences.ts
+@@ loadUserPreferences(userId) @@
+-  try {
+-    return await prefs.findByUser(userId);
+-  } catch (e) {
+-    return DEFAULT_PREFERENCES;
+-  }
++  const found = await prefs.findByUser(userId);
++  return found ?? DEFAULT_PREFERENCES; // missing record only — *not* error fallback
+```
+Distinguish "no record" (data layer returns `null` / `undefined` for missing) from "infrastructure error" (let it propagate). Default-on-missing is a contract; default-on-error is a bug. If a default-on-error is genuinely required at this site, it must be enforced by an explicit contract document and a test that asserts the fallback path.
 
 **Do not append a Priority Assessment, severity tags, or any ranking metadata.** The list ends with the last defect. Every reported defect is a blocker by virtue of being reported; the implicit ordering is "fix all of them". If you cannot say with conviction "this must be fixed before the change ships", that finding has no place in this output.
 
