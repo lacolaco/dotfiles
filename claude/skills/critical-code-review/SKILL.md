@@ -18,6 +18,8 @@ agent: code-critic
    - Architectural misalignment: Violations of established patterns, inappropriate dependencies
    - Hidden complexity: Code that appears simple but masks difficult edge cases
    - Production risks: Error handling gaps, resource leaks, scalability bottlenecks
+   - Contract violations (Design by Contract): Preconditions / postconditions / invariants left implicit; functions silently coerce or "repair" invalid input instead of rejecting it; defensive null/range checks scattered across callers because the callee's contract is undefined; mutable shared state without invariant guarantees; type signatures that lie (return `T` but actually `T | null | Error`)
+   - Insecure-by-design defaults (Secure by Design): Trust boundaries unclear or unenforced; defaults are permissive rather than restrictive (auth-off, world-readable, allow-list missing); least-privilege violated (broad scopes, root processes, over-broad DB grants); failure modes fail open (catch-and-continue on auth/crypto errors); secrets embedded in code, logs, error messages, or client bundles; input trusted past the boundary instead of validated/parsed at it; cryptographic primitives hand-rolled or misused (custom hashing, ECB, predictable IVs, missing constant-time compare)
 
 3. **Trace to root causes**: For each issue, ask:
    - Why does this problem exist?
@@ -93,6 +95,18 @@ For each critical issue:
 **Root Cause**: Upstream service violates data contract but no one questions why we're compensating instead of fixing the source
 **Impact**: Validation layer now has 200 lines of workarounds. Every new field requires another handler. Root problem (broken contract) remains, metastasizing.
 **Fix**: Stop accepting band-aids. Fix the upstream service to honor its contract. If that's not possible, establish explicit null-handling policy at system boundary, not scattered workarounds. The discomfort of "yet another special case" was a signal—the architecture is fighting you because it's wrong.
+
+**Example 5 (Contract Violation — Design by Contract)**:
+**Issue**: `chargeCard(amount)` accepts negative and zero amounts, silently treats them as no-op, and returns `success: true`
+**Root Cause**: Function has no explicit precondition on `amount > 0`. Callers individually guess what's valid; some validate, some don't. The "be liberal in what you accept" reflex hides bugs instead of surfacing them.
+**Impact**: Callers that forget to validate ship silent failures to production—refund flows record successful charges that never happened. Reconciliation breaks. Every caller now needs defensive checks duplicating logic that belongs in one place.
+**Fix**: Make the precondition explicit at the contract boundary: reject `amount <= 0` with a typed error (or use a non-negative type). Remove caller-side defensive checks—the contract enforces it once. If the type system supports it, encode `PositiveAmount` as a parsed type so invalid values can't reach the function at all.
+
+**Example 6 (Insecure Default — Secure by Design)**:
+**Issue**: New admin API endpoint deployed with `requireAuth` defaulting to `false`; opt-in via per-route flag
+**Root Cause**: Framework defaults to "open, then lock down per route" instead of "closed, then permit per route." Reviewer must remember to flip the flag for every new endpoint—a human checklist where the failure mode is silent exposure.
+**Impact**: Any new endpoint added without the explicit flag is publicly callable. CVE-shaped class of bugs that grows linearly with developer headcount. Detection requires scanning every PR; one miss is a breach.
+**Fix**: Invert the default. `requireAuth` is `true` for every route; explicit `public: true` is required to expose one. Make the insecure choice loud and reviewable, not the default. This eliminates the entire bug class structurally instead of relying on per-PR vigilance.
 
 End with a **Priority Assessment**: What must be fixed before merge? What should be addressed soon? What can be deferred?
 
