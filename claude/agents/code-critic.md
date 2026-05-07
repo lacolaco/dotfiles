@@ -35,13 +35,27 @@ A review that exists only in the session message stream evaporates when the sess
 
 Steps (do them in this order, every time):
 
-1. **Resolve the workspace root and branch slug**:
-   - Run `Bash` with `git rev-parse --show-toplevel` to obtain the workspace root. If git is unavailable, use `pwd`.
-   - Run `git rev-parse --abbrev-ref HEAD` to obtain the current branch. **Slugify** it: replace `/` with `-`, drop characters outside `[A-Za-z0-9_-]`. Example: `feat/call-code-critic-skill` → `feat-call-code-critic-skill`.
-   - If the branch resolves to `HEAD` (detached), fall back to the short SHA from `git rev-parse --short HEAD`. If git is unavailable entirely, use the workspace root's basename as the slug.
-2. **Ensure `<workspaceRootDir>/tmp/` exists**: `mkdir -p <workspaceRootDir>/tmp`.
-3. **Determine the next revision number**: list existing `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). Parse the trailing 3-digit revision from each filename and use `max + 1`; start at `001` if none exist. Pad to 3 digits so files sort lexicographically in revision order. The revision is **per-branch**: each branch has its own counter.
-4. **Write the full findings** to `<workspaceRootDir>/tmp/code-critic-<branch-slug>-<rev>.md` (e.g., `tmp/code-critic-feat-call-code-critic-skill-003.md`). Use the absolute path with the `Write` tool. Begin the file with a YAML front-matter block:
+1. **Resolve the workspace root** (where the file goes):
+
+   The workspace root is the **Claude Code session's primary working directory**—the directory the user launched Claude Code in. It is **not** the directory of the code under review. In a multi-project workspace (e.g., `~/works/` containing `project-a/` and `project-b/`), the review target may live deep inside one sub-project; that sub-project is **never** the workspace root. The single canonical location for `tmp/` is the workspace root, regardless of which project is being reviewed.
+
+   Resolution order (use the first that works):
+   - `Bash`: `printenv CLAUDE_PROJECT_DIR` — if non-empty, that absolute path is the workspace root.
+   - Otherwise, `Bash`: `pwd` taken **before** any `cd` into the review target. The very first shell call must be `pwd`; capture its result and use it.
+
+   **Forbidden**: do **not** call `git rev-parse --show-toplevel`. It returns the review target's git repo root, which in a multi-project workspace is a sub-project—creating `tmp/` there pollutes the project tree and is the bug this contract exists to prevent.
+
+2. **Resolve the branch slug** (filename key):
+
+   The branch slug identifies *which work the review is about*, so derive it from the **review target's** git context, not the workspace root. Run `Bash`: `git -C <review-target-path> rev-parse --abbrev-ref HEAD`. Slugify: replace `/` with `-`, drop characters outside `[A-Za-z0-9_-]`. Example: `feat/auth` → `feat-auth`.
+   - Detached HEAD: fall back to `git -C <review-target-path> rev-parse --short HEAD`.
+   - Review target is not a git repo: use a stable basename of the review target path as the slug.
+
+3. **Ensure `<workspaceRootDir>/tmp/` exists**: `Bash`: `mkdir -p <workspaceRootDir>/tmp`. The path **always** starts from the workspace root resolved in step 1—never from the review target.
+
+4. **Determine the next revision number**: list `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). Parse the trailing 3-digit revision from each filename and use `max + 1`; start at `001` if none exist. Pad to 3 digits so files sort lexicographically in revision order. The revision is **per-branch-slug**: each branch (across all projects in the workspace, but distinguished by slug) has its own counter.
+
+5. **Write the full findings** to `<workspaceRootDir>/tmp/code-critic-<branch-slug>-<rev>.md`. Construct the absolute path by concatenation: `<workspaceRootDir from step 1> + "/tmp/" + <filename>`. **Before writing, verify the path begins with the workspace root from step 1.** If the path begins with the review target instead, you have made the multi-project mistake; recompute step 1 and the absolute path before calling `Write`. Use the `Write` tool with the absolute path. Begin the file with a YAML front-matter block:
 
    ```
    ---
@@ -57,7 +71,7 @@ Steps (do them in this order, every time):
 
    followed by the full findings body in the `Issue / Root Cause / Impact / Fix` + `Priority Assessment` form.
 
-5. **End your returned message with the absolute file path** on its own line, prefixed by `Review saved to: `. The findings body must also appear in the returned message itself (so the caller can surface it verbatim without re-reading the file)—the persisted file is the durable record, the inline body is the live channel.
+6. **End your returned message with the absolute file path** on its own line, prefixed by `Review saved to: `. The findings body must also appear in the returned message itself (so the caller can surface it verbatim without re-reading the file)—the persisted file is the durable record, the inline body is the live channel.
 
 If any step fails (permission, disk, missing tools), return an error naming the step that failed; do not return findings without persistence. The postcondition is non-negotiable.
 
@@ -71,7 +85,7 @@ The persisted files from your Output Contract are not write-only logs—they are
 
 Steps (perform after the precondition check, before applying the Core Principles below):
 
-1. **List**: resolve the current branch slug as in the Output Contract step 1, then enumerate `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). The branch is the natural context boundary—reviews persisted under other branch slugs belong to other contexts and must not be reconciled here.
+1. **List**: resolve the workspace root and the branch slug exactly as in Output Contract steps 1 and 2 (workspace root from `CLAUDE_PROJECT_DIR` or initial `pwd`—**never** from `git rev-parse --show-toplevel` of the review target; branch slug from the review target's git context). Then enumerate `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). The branch is the natural context boundary—reviews persisted under other branch slugs belong to other contexts and must not be reconciled here.
 2. **Filter to relevant**: read each in-branch file's YAML front-matter (lower revisions first) and consider it relevant when its `target` overlaps the current target, its `intent` is related, and its `layer` is the same or adjacent. When in doubt, read.
 3. **Reconcile each prior issue against the current code**:
    - **Resolved**: the structural fix has been applied. Do not re-raise as a finding. You may note it once under the Priority Assessment as "previously raised, now resolved" only if it informs current prioritization.
