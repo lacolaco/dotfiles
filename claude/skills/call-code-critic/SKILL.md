@@ -49,11 +49,10 @@ The agent's first response is **never the end**. Iterate the cycle below until t
 
 For each iteration:
 
-1. **Surface the agent's findings to the user verbatim** (Output Contract: `Issue / Root Cause / Impact / Fix` + `Priority Assessment`). Note the persisted file path returned by the agent (`Review saved to: <path>`).
-2. **Triage with the user** for each finding using `AskUserQuestion`:
-   - **Address now**: apply the structural fix the agent prescribed (not just a textual patch—the `Fix` text is the structural target). Commit if appropriate.
-   - **Defer (with reason)**: only if the user explicitly accepts the deferral. The issue stays in the persisted file; the next review's Prior Review Awareness will carry it over.
-   - **Reject (with reason)**: rare. Only when the user gives a domain reason that makes the finding non-applicable. Record the reasoning so the next review reconciles correctly and does not re-raise it as a persisted issue.
+1. **Surface the agent's findings to the user verbatim** (Output Contract: `Issue / Root Cause / Impact / Fix`). The agent does not emit Priority Assessment or severity tags—**every reported finding is a blocker by virtue of being reported**. Do not introduce a downstream ranking, do not summarize "the important ones", do not soften any item. Note the persisted file path returned by the agent (`Review saved to: <path>`).
+2. **Triage with the user** for each finding using `AskUserQuestion`. Triage is binary because the upstream contract is binary:
+   - **Address**: apply the structural fix the agent prescribed (not just a textual patch—the `Fix` text is the structural target). Commit if appropriate.
+   - **Reject (with reason)**: only when the user provides a domain reason that makes the finding non-applicable (e.g., the agent misread the constraint, the code path is dead, the requirement has changed). Record the reasoning so the next review reconciles correctly and does not re-raise it. Rejection requires an explicit reason; "later" or "minor" is **not** a reason and is not allowed—the upstream contract guarantees there are no "minor" findings.
 3. **Apply the addressed fixes** to the code under review.
 4. **Re-review via `SendMessage` against the captured agent ID**—do **not** re-launch a fresh `Agent` for each iteration. Resuming the same agent keeps the prior findings, the persisted file paths, and the in-conversation discussion in its working memory; re-launching loses all of that and forces the agent to rebuild context from the persisted file alone. Continuity of the agent's working memory is the value of holding the ID.
 
@@ -67,21 +66,21 @@ For each iteration:
 
    ## User decisions on prior findings
    - <prior issue title> → Address (fix applied as: <one-line summary>)
-   - <prior issue title> → Defer (reason: <user-supplied reason>)
-   - <prior issue title> → Reject (reason: <user-supplied reason; agent should not re-raise>)
+   - <prior issue title> → Reject (reason: <user-supplied domain reason; agent should not re-raise>)
    ```
 
    The agent runs another iteration—reconciles via Prior Review Awareness, applies Core Principles to the delta, and persists a fresh `code-critic-<branch-slug>-<rev+1>.md`. Surface the new findings (return to step 1 of this loop).
 
    **Fallback**: if the agent ID is unavailable (e.g., the runtime no longer accepts `SendMessage` to it), launch a fresh `Agent` as in step 2 of this Procedure, but expand the `Intent of the change` to include the iteration number and the prior file path. Prior Review Awareness will still reconcile via the persisted files, but the in-conversation memory of the prior pass is lost—accept this only as a fallback.
 
-**Termination condition** (loop exits only when **all three** hold):
+**Termination condition** (loop exits only when **both** hold):
 
-- The agent returns **no new must-fix findings** in the current iteration.
-- The agent reports **no persisted (carried-over) findings**, or every persisted finding has a recorded user decision (Defer / Reject) from a prior iteration.
-- The user has explicitly accepted any remaining lower-priority items as out of scope.
+- The agent returns **no new findings** in the current iteration.
+- Every persisted (carried-over) finding from prior iterations has a recorded outcome (Address with fix applied, or Reject with explicit user-supplied domain reason).
 
-When the loop exits, summarize the final state to the user: which iterations ran, which findings were addressed in code, which were deferred (with reasons), which were rejected (with reasons), and the path of the latest persisted review.
+There is no "deferred" state and no "lower-priority items left out of scope" termination—the upstream contract guarantees every reported finding is a blocker, so the loop exits only when all of them are resolved or explicitly rejected.
+
+When the loop exits, summarize the final state to the user: which iterations ran, which findings were addressed in code, which were rejected (with reasons), and the path of the latest persisted review.
 
 ## Constraints
 
