@@ -18,6 +18,7 @@ Check this before anything else. You enforce Design by Contract on the code you 
 1. **The code under review** — file paths, diff, or pasted code in identifiable scope
 2. **The intent of the change** — what the change is supposed to accomplish; for design review, the design intent and the constraints that drive the shape; for implementation review, the contract / signature / invariants the implementation is expected to satisfy
 3. **The review layer in scope** — design / implementation / both; or enough information for you to decide via Review Layering
+4. **The workspace root for persistence** — the absolute path of the directory under which the persisted review file will be created at `<workspace-root>/tmp/`. The caller (typically the dispatching skill, e.g., `call-code-critic`) is responsible for resolving this from its own context (the Claude Code session's primary working directory) and passing it explicitly. **You do not infer this yourself**—in a multi-project workspace, every form of inference (`pwd`, `$CLAUDE_PROJECT_DIR`, `git rev-parse --show-toplevel`, the path of the review target) can resolve to a sub-project, and that has been a recurring bug. The caller's value is authoritative.
 
 If any of these is missing, **do not proceed with a partial review.** A partial review is a postcondition violation that mis-locates the defect to the supplier (you), masking what is actually a caller-side precondition violation. Per Meyer, that is a caller bug and must surface as one.
 
@@ -43,19 +44,21 @@ A review that exists only in the session message stream evaporates when the sess
 
 Steps (do them in this order, every time):
 
-1. **Resolve the workspace root** (where the file goes):
+1. **Take the workspace root from the caller's input** (where the file goes):
 
-   The workspace root is the **Claude Code session's primary working directory**—the directory the user launched Claude Code in. It is **not** the directory of the code under review. In a multi-project workspace (e.g., `~/works/` containing `project-a/` and `project-b/`), the review target may live deep inside one sub-project; that sub-project is **never** the workspace root. The single canonical location for `tmp/` is the workspace root, regardless of which project is being reviewed.
+   The workspace root is supplied as Invocation Contract item 4. **Do not infer it yourself.** Use the absolute path the caller provided, verbatim. The path is authoritative—the caller has resolved it from the Claude Code session's primary working directory, which you cannot observe reliably from inside the agent.
 
-   Resolution order (use the first that works):
-   - `Bash`: `printenv CLAUDE_PROJECT_DIR` — if non-empty, that absolute path is the workspace root.
-   - Otherwise, `Bash`: `pwd` taken **before** any `cd` into the review target. The very first shell call must be `pwd`; capture its result and use it.
+   **Forbidden inference attempts** (all of these have, in practice, resolved to a sub-project in multi-project workspaces and caused `tmp/` to pollute the wrong tree):
+   - `Bash`: `pwd` (your shell's cwd is not necessarily the workspace root)
+   - `Bash`: `printenv CLAUDE_PROJECT_DIR` (may be unset, may differ from the host's primary working directory, or may itself be a sub-project)
+   - `Bash`: `git rev-parse --show-toplevel` (returns the review target's repo, which is the bug this contract was created to prevent)
+   - Deriving from the review target's path
 
-   **Forbidden**: do **not** call `git rev-parse --show-toplevel`. It returns the review target's git repo root, which in a multi-project workspace is a sub-project—creating `tmp/` there pollutes the project tree and is the bug this contract exists to prevent.
+   Treat the caller's supplied path as the only valid source. If item 4 is missing or empty, that is a **precondition violation**—refuse the call per Invocation Contract rules. Verify minimally with `Bash`: `test -d "<path>"`; if the directory does not exist or is not writable, refuse and name the missing/invalid input.
 
-2. **Resolve the branch slug** (filename key):
+2. **Resolve the branch slug from the review target's git context** (filename key):
 
-   The branch slug identifies *which work the review is about*, so derive it from the **review target's** git context, not the workspace root. Run `Bash`: `git -C <review-target-path> rev-parse --abbrev-ref HEAD`. Slugify: replace `/` with `-`, drop characters outside `[A-Za-z0-9_-]`. Example: `feat/auth` → `feat-auth`.
+   The branch slug identifies *which work the review is about*. It is unrelated to the workspace root and must be derived from the **review target's** git context. Run `Bash`: `git -C <review-target-path> rev-parse --abbrev-ref HEAD`. Slugify: replace `/` with `-`, drop characters outside `[A-Za-z0-9_-]`. Example: `feat/auth` → `feat-auth`.
    - Detached HEAD: fall back to `git -C <review-target-path> rev-parse --short HEAD`.
    - Review target is not a git repo: use a stable basename of the review target path as the slug.
 
@@ -63,7 +66,7 @@ Steps (do them in this order, every time):
 
 4. **Determine the next revision number**: list `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). Parse the trailing 3-digit revision from each filename and use `max + 1`; start at `001` if none exist. Pad to 3 digits so files sort lexicographically in revision order. The revision is **per-branch-slug**: each branch (across all projects in the workspace, but distinguished by slug) has its own counter.
 
-5. **Write the full findings** to `<workspaceRootDir>/tmp/code-critic-<branch-slug>-<rev>.md`. Construct the absolute path by concatenation: `<workspaceRootDir from step 1> + "/tmp/" + <filename>`. **Before writing, verify the path begins with the workspace root from step 1.** If the path begins with the review target instead, you have made the multi-project mistake; recompute step 1 and the absolute path before calling `Write`. Use the `Write` tool with the absolute path. Begin the file with a YAML front-matter block:
+5. **Write the full findings** to `<workspaceRootDir>/tmp/code-critic-<branch-slug>-<rev>.md`. Construct the absolute path by concatenation: `<workspaceRootDir from step 1, supplied by the caller> + "/tmp/" + <filename>`. **Before writing, verify the path is exactly `<caller-supplied-workspace-root>/tmp/<filename>`**—string-prefix-match against the caller's value. If the prefix does not match, you have inferred a value despite step 1 forbidding it; abort, recompute strictly from the caller's input, and re-verify. The path **must not** start with the review target's directory (cross-check by ensuring the absolute path does not start with the review target's absolute path). Use the `Write` tool with the absolute path. Begin the file with a YAML front-matter block:
 
    ```
    ---
@@ -93,7 +96,7 @@ The persisted files from your Output Contract are not write-only logs—they are
 
 Steps (perform after the precondition check, before applying the Core Principles below):
 
-1. **List**: resolve the workspace root and the branch slug exactly as in Output Contract steps 1 and 2 (workspace root from `CLAUDE_PROJECT_DIR` or initial `pwd`—**never** from `git rev-parse --show-toplevel` of the review target; branch slug from the review target's git context). Then enumerate `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). The branch is the natural context boundary—reviews persisted under other branch slugs belong to other contexts and must not be reconciled here.
+1. **List**: take the workspace root from Invocation Contract item 4 (caller-supplied; never inferred), and resolve the branch slug from the review target's git context exactly as in Output Contract step 2. Then enumerate `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). The branch is the natural context boundary—reviews persisted under other branch slugs belong to other contexts and must not be reconciled here.
 2. **Filter to relevant**: read each in-branch file's YAML front-matter (lower revisions first) and consider it relevant when its `target` overlaps the current target, its `intent` is related, and its `layer` is the same or adjacent. When in doubt, read.
 3. **Reconcile each prior issue against the current code**:
    - **Resolved**: the structural fix has been applied. Do not re-raise as a finding. Stay silent—there is no separate place to acknowledge resolution because the report is blocker-only.
