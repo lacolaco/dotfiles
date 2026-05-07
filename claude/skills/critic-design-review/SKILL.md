@@ -100,7 +100,7 @@ For each issue:
 **Issue**: [Concise description of the design problem]
 **Root Cause**: [What design decision created this; why the shape is wrong]
 **Impact**: [Concrete structural consequences—maintenance burden, future bug classes, security exposure, contract ambiguity]
-**Fix**: [Fundamental redesign needed, not a patch]
+**Fix**: [The fundamental redesign needed. Whenever the change can be expressed as a concrete textual edit—signature changes, type replacements, structural moves—present it as a **unified diff** in a fenced \`diff\` code block, anchored with file path and surrounding context. When the change is genuinely architectural and cannot be reduced to a single diff, explain it in prose **and** include at least one diff snippet illustrating a representative call site or signature. Vague phrases like "introduce an abstraction" / "refactor to a proper boundary" without a diff are forbidden—they are the same as no Fix.]
 
 **Example 1 (Over-engineering)**:
 **Issue**: Generic "Strategy" pattern with plugin system for a single payment provider
@@ -124,13 +124,79 @@ For each issue:
 **Issue**: `chargeCard(amount: Number)` accepts negative and zero amounts, silently no-ops, and returns `success: true`. No `require` / `ensure` is stated; callers individually guess what is valid input.
 **Root Cause**: The contract is implicit. There is no explicit precondition (`amount > 0`) and no postcondition relating input to outcome. Per Meyer, the routine has misallocated bug ownership: a precondition violation—the **caller's** responsibility—is being silently absorbed and reported as success, which any honest postcondition would forbid. The duplicated guard each caller grows is the symptom of the missing contract.
 **Impact**: Callers that forget the defensive check ship silent failures—refund flows record successful charges that never happened. Reconciliation breaks. Every new caller adds another guard, every miss is a defect with no contractual owner to hold accountable.
-**Fix**: State the contract explicitly. Precondition: `amount > 0` (rejected at the boundary with a typed error). Postcondition: `success: true` implies the card was charged exactly `amount`. Better still, encode `PositiveAmount` as a domain primitive so the precondition is enforced by the type system before the call—invalid input becomes unrepresentable, caller-side defensive checks are deleted, and bug ownership is unambiguous.
+**Fix**: Encode the precondition in the type system so invalid input cannot reach the routine; the contract is the type, not a prose comment.
+
+```diff
+--- a/src/payments/PositiveAmount.ts
++++ b/src/payments/PositiveAmount.ts
+@@ new file @@
++export class PositiveAmount {
++  private constructor(public readonly value: number) {}
++  static of(n: number): PositiveAmount {
++    if (n <= 0) throw new InvalidAmount(n);
++    return new PositiveAmount(n);
++  }
++}
+```
+
+```diff
+--- a/src/payments/chargeCard.ts
++++ b/src/payments/chargeCard.ts
+-function chargeCard(amount: number): { success: boolean } {
+-  if (amount <= 0) return { success: true }; // silent no-op
+-  ...
+-}
++function chargeCard(amount: PositiveAmount): { success: true } {
++  // require: caller must supply PositiveAmount (compile-time)
++  // ensure: success: true implies the card was charged amount.value
++  ...
++}
+```
+
+Caller-side defensive checks are then deleted because the type system enforces the precondition; bug ownership is unambiguous (caller cannot construct an invalid `PositiveAmount`).
 
 **Example 5 (Primitive Obsession at the Boundary — Secure by Design)**:
 **Issue**: `placeOrder(customerId: String, quantity: Int, sku: String)` accepts raw primitives all the way from the controller through services to the persistence layer; validation is scattered across each layer (and missed in some)
 **Root Cause**: Domain meaning is carried by primitive types instead of domain primitives. There is no `CustomerId`, `Quantity`, or `Sku` whose constructor enforces invariants. With no parse step at the boundary, every interior caller must re-validate—and each one validates differently, or not at all. Invalid state is representable everywhere, so it eventually appears everywhere.
 **Impact**: Negative quantities, malformed SKUs, and SQL-shaped customer IDs reach business logic and storage whenever a single validation site is forgotten. The bug class grows monotonically with every new caller; security depends on perfect human recall.
-**Fix**: Introduce domain primitives. `Quantity` constructor rejects values `<= 0`; `CustomerId` rejects non-UUID input; `Sku` rejects malformed strings. At the boundary, parse untrusted input in the order *origin → size → lexical → syntax → semantics* and reject early; emit domain primitives or an error. Interior signatures accept only domain primitives, so invalid states become unrepresentable and downstream defensive validation can be deleted.
+**Fix**: Replace primitives with domain primitives constructed at the boundary; interior signatures accept only the domain primitives, making invalid state unrepresentable past the parse step. The change touches the boundary parser, the signature, and every interior caller; below is the representative shape:
+
+```diff
+--- a/src/order/PlaceOrderController.ts
++++ b/src/order/PlaceOrderController.ts
+@@ POST /orders @@
+-  const { customerId, quantity, sku } = req.body;
+-  return placeOrder(customerId, quantity, sku);
++  // parse-at-the-boundary: origin → size → lexical → syntax → semantics
++  const cmd = PlaceOrderCommand.parse(req.body); // throws on invalid input
++  return placeOrder(cmd);
+```
+
+```diff
+--- a/src/order/placeOrder.ts
++++ b/src/order/placeOrder.ts
+-function placeOrder(customerId: string, quantity: number, sku: string) { ... }
++function placeOrder(cmd: PlaceOrderCommand) { ... }
+```
+
+```diff
+--- a/src/order/PlaceOrderCommand.ts
++++ b/src/order/PlaceOrderCommand.ts
+@@ new file @@
++export class CustomerId { ... static of(s: string): CustomerId; } // rejects non-UUID
++export class Quantity   { ... static of(n: number): Quantity; }   // rejects <= 0
++export class Sku        { ... static of(s: string): Sku; }        // rejects malformed
++export class PlaceOrderCommand {
++  constructor(
++    public readonly customerId: CustomerId,
++    public readonly quantity: Quantity,
++    public readonly sku: Sku,
++  ) {}
++  static parse(raw: unknown): PlaceOrderCommand { /* validation in fixed order */ }
++}
+```
+
+Downstream defensive validation in services and repositories is deleted: the type system enforces the contract once at the boundary.
 
 **Do not append a Priority Assessment, severity tags, or any ranking metadata.** The list ends with the last issue. Every reported issue is a blocker by virtue of being reported; the implicit ordering is "address all of them". If you cannot say with conviction "this must be fixed before the change ships", that finding has no place in this output.
 
