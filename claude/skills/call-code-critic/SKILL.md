@@ -23,7 +23,7 @@ The agent's Invocation Contract requires three items. If the user's invocation a
 - **Intent of the change**: what the change is supposed to accomplish; for design review, the design intent and the constraints driving the shape; for implementation review, the contract / signature / invariants the implementation must satisfy
 - **Review layer in scope**: `design` / `implementation` / `both` / `unspecified`
 
-### 2. Launch `code-critic` via the Agent tool
+### 2. Launch `code-critic` for the initial iteration
 
 Call the `Agent` tool with `subagent_type: code-critic`. Pass the three gathered items in this structure (headings match the agent's Invocation Contract terms verbatim):
 
@@ -39,7 +39,9 @@ Call the `Agent` tool with `subagent_type: code-critic`. Pass the three gathered
 design | implementation | both | unspecified
 ```
 
-Pass a short, identifying `description` such as `Critical review via code-critic`.
+Pass a short, identifying `description` such as `Critical review via code-critic`. You may also pass a `name` such as `code-critic-<branch-slug>` so the agent is addressable by stable name in addition to the runtime-assigned ID.
+
+**Capture the agent's ID** from the response. The runtime emits it both as `agentId: <id>` and as a hint like `SendMessage with to: '<id>' to continue this agent`. This ID is the handle for every subsequent iteration in this loop—do not lose it. The conversation context inside that agent run is the one you must resume on every re-review.
 
 ### 3. Drive the address-then-re-review loop (mandatory)
 
@@ -53,7 +55,25 @@ For each iteration:
    - **Defer (with reason)**: only if the user explicitly accepts the deferral. The issue stays in the persisted file; the next review's Prior Review Awareness will carry it over.
    - **Reject (with reason)**: rare. Only when the user gives a domain reason that makes the finding non-applicable. Record the reasoning so the next review reconciles correctly and does not re-raise it as a persisted issue.
 3. **Apply the addressed fixes** to the code under review.
-4. **Re-launch `code-critic`** (return to step 2 of this Procedure) with the same Invocation Contract shape, but update the `Intent of the change` to reflect the iteration—e.g., append: `Iteration N+1: addresses findings from <prior file path>`. The agent's Prior Review Awareness will reconcile against the persisted file and decide what is Resolved / Persisted / Partially addressed / Regressed.
+4. **Re-review via `SendMessage` against the captured agent ID**—do **not** re-launch a fresh `Agent` for each iteration. Resuming the same agent keeps the prior findings, the persisted file paths, and the in-conversation discussion in its working memory; re-launching loses all of that and forces the agent to rebuild context from the persisted file alone. Continuity of the agent's working memory is the value of holding the ID.
+
+   Call `SendMessage` with `to: '<captured agent ID>'`. The message body focuses on the **delta**, since the agent already knows what was reviewed and what it raised:
+
+   ```
+   ## Iteration N+1: addresses findings from <prior file path>
+
+   ## Changes since prior review
+   <what was changed in the code; diff, paths, or summary referencing the prior issues>
+
+   ## User decisions on prior findings
+   - <prior issue title> → Address (fix applied as: <one-line summary>)
+   - <prior issue title> → Defer (reason: <user-supplied reason>)
+   - <prior issue title> → Reject (reason: <user-supplied reason; agent should not re-raise>)
+   ```
+
+   The agent runs another iteration—reconciles via Prior Review Awareness, applies Core Principles to the delta, and persists a fresh `code-critic-<branch-slug>-<rev+1>.md`. Surface the new findings (return to step 1 of this loop).
+
+   **Fallback**: if the agent ID is unavailable (e.g., the runtime no longer accepts `SendMessage` to it), launch a fresh `Agent` as in step 2 of this Procedure, but expand the `Intent of the change` to include the iteration number and the prior file path. Prior Review Awareness will still reconcile via the persisted files, but the in-conversation memory of the prior pass is lost—accept this only as a fallback.
 
 **Termination condition** (loop exits only when **all three** hold):
 
@@ -70,3 +90,4 @@ When the loop exits, summarize the final state to the user: which iterations ran
 - A single invocation is **not** a complete review. Exiting after one pass without a recorded user decision on the findings is a contract violation of this skill.
 - The user owns the Address / Defer / Reject decision for each finding. Do not auto-defer or auto-reject; ask via `AskUserQuestion`.
 - Apply structural fixes (per the agent's `Fix` text), not surface-level textual patches that leave the root cause intact.
+- **Capture the initial agent ID** and use `SendMessage` to that ID for every re-review in the loop. Re-launching a fresh `Agent` per iteration discards the agent's working memory of the prior pass and is wasteful; only fall back to a fresh launch if the captured ID is no longer addressable.
