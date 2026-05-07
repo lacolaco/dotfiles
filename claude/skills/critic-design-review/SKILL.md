@@ -23,7 +23,7 @@ When you find a problem, name the cohesion or coupling failure first; the specia
 
 ## Review Process
 
-1. **Reconstruct the design**: What *shape* does this change introduce or modify? What boundaries does it draw, what contracts does it expose, what abstractions does it add or remove? If the answer isn't recoverable from the diff and stated intent, demand clarification before reviewing.
+1. **Reconstruct the design**: What *shape* does this change introduce or modify? What boundaries does it draw, what contracts does it expose, what abstractions does it add or remove? If the answer is not recoverable from the diff and stated intent, **stop and treat this as a caller-side precondition violation**: list the missing inputs (e.g., the design intent, the constraints driving the shape, which boundary is in scope) and refuse to proceed. A partial review is worse than no review—it mis-locates the defect to the supplier and masks the missing context. Do not produce placeholder findings, generic checklists, or speculative critiques in lieu of the missing context. Resume only after the caller supplies what is required.
 
 2. **Apply the cohesion / coupling lens first**: Does each module have a single focused responsibility? Does each dependency carry the minimum substance needed? Most of the specialized flaws below are downstream symptoms of failures here.
 

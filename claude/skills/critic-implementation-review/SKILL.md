@@ -14,7 +14,7 @@ If the change introduces or modifies design (new abstraction, new boundary, new 
 
 ## Review Process
 
-1. **Anchor on the design contract**: What is the function / module supposed to do per its declared signature, type, and stated contract? What invariants is it expected to preserve? If you cannot recover the intended contract, demand it before reviewing—otherwise you cannot tell defects from unspecified behavior.
+1. **Anchor on the design contract**: What is the function / module supposed to do per its declared signature, type, and stated contract? What invariants is it expected to preserve? If you cannot recover the intended contract, **stop and treat this as a caller-side precondition violation**: list the missing inputs (e.g., the contract being implemented, the invariants the code must preserve, the input space the implementation must handle) and refuse to proceed. Without the contract, you cannot tell a defect from unspecified behavior—any review you produced would be speculation, not critique. Do not produce placeholder findings, generic checklists, or speculative critiques in lieu of the missing context. Resume only after the caller supplies what is required.
 
 2. **Identify critical implementation defects**:
    - Correctness: Logic errors, off-by-one, wrong condition, missed branch, incorrect arithmetic, wrong comparator
