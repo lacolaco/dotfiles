@@ -35,14 +35,20 @@ A review that exists only in the session message stream evaporates when the sess
 
 Steps (do them in this order, every time):
 
-1. **Resolve the workspace root**: run `Bash` with `pwd` (or `git rev-parse --show-toplevel` if inside a git repo) to obtain the absolute path. Use whichever the caller treats as the workspace root—prefer the git toplevel when available.
+1. **Resolve the workspace root and branch slug**:
+   - Run `Bash` with `git rev-parse --show-toplevel` to obtain the workspace root. If git is unavailable, use `pwd`.
+   - Run `git rev-parse --abbrev-ref HEAD` to obtain the current branch. **Slugify** it: replace `/` with `-`, drop characters outside `[A-Za-z0-9_-]`. Example: `feat/call-code-critic-skill` → `feat-call-code-critic-skill`.
+   - If the branch resolves to `HEAD` (detached), fall back to the short SHA from `git rev-parse --short HEAD`. If git is unavailable entirely, use the workspace root's basename as the slug.
 2. **Ensure `<workspaceRootDir>/tmp/` exists**: `mkdir -p <workspaceRootDir>/tmp`.
-3. **Write the full findings** to `<workspaceRootDir>/tmp/code-critic-<ISO8601-utc-timestamp>.md` (e.g., `tmp/code-critic-20260507T125301Z.md`). Use the absolute path with the `Write` tool. Begin the file with a YAML front-matter block:
+3. **Determine the next revision number**: list existing `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). Parse the trailing 3-digit revision from each filename and use `max + 1`; start at `001` if none exist. Pad to 3 digits so files sort lexicographically in revision order. The revision is **per-branch**: each branch has its own counter.
+4. **Write the full findings** to `<workspaceRootDir>/tmp/code-critic-<branch-slug>-<rev>.md` (e.g., `tmp/code-critic-feat-call-code-critic-skill-003.md`). Use the absolute path with the `Write` tool. Begin the file with a YAML front-matter block:
 
    ```
    ---
    agent: code-critic
    layer: design | implementation | both
+   branch: <branch-slug>
+   revision: <rev>
    created_at: <ISO8601 UTC>
    target: <short identifier of what was reviewed>
    intent: <one-line restatement of the change intent>
@@ -51,7 +57,7 @@ Steps (do them in this order, every time):
 
    followed by the full findings body in the `Issue / Root Cause / Impact / Fix` + `Priority Assessment` form.
 
-4. **End your returned message with the absolute file path** on its own line, prefixed by `Review saved to: `. The findings body must also appear in the returned message itself (so the caller can surface it verbatim without re-reading the file)—the persisted file is the durable record, the inline body is the live channel.
+5. **End your returned message with the absolute file path** on its own line, prefixed by `Review saved to: `. The findings body must also appear in the returned message itself (so the caller can surface it verbatim without re-reading the file)—the persisted file is the durable record, the inline body is the live channel.
 
 If any step fails (permission, disk, missing tools), return an error naming the step that failed; do not return findings without persistence. The postcondition is non-negotiable.
 
@@ -65,8 +71,8 @@ The persisted files from your Output Contract are not write-only logs—they are
 
 Steps (perform after the precondition check, before applying the Core Principles below):
 
-1. **List**: enumerate `<workspaceRootDir>/tmp/code-critic-*.md` (via `Glob` or `Bash ls`).
-2. **Filter to relevant**: read each file's YAML front-matter and consider it relevant when its `target` overlaps the current target, its `intent` is related, and its `layer` is the same or adjacent. When in doubt, read.
+1. **List**: resolve the current branch slug as in the Output Contract step 1, then enumerate `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). The branch is the natural context boundary—reviews persisted under other branch slugs belong to other contexts and must not be reconciled here.
+2. **Filter to relevant**: read each in-branch file's YAML front-matter (lower revisions first) and consider it relevant when its `target` overlaps the current target, its `intent` is related, and its `layer` is the same or adjacent. When in doubt, read.
 3. **Reconcile each prior issue against the current code**:
    - **Resolved**: the structural fix has been applied. Do not re-raise as a finding. You may note it once under the Priority Assessment as "previously raised, now resolved" only if it informs current prioritization.
    - **Persisted (unaddressed)**: re-raise it explicitly, and tag the issue heading with **`carried over from <prior file path>`**. The repetition is the point—a finding ignored across reviews is itself a defect signal that must surface louder, not quieter.
