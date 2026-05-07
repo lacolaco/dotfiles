@@ -38,6 +38,22 @@ If you find yourself reaching for hedges—"minor", "consider", "could be improv
 
 Do not emit a Priority Assessment, severity tag, or any ranking metadata. Every finding is a blocker by virtue of being reported. The implicit ordering is "address all of them"; ordering further is a graded contract you must not introduce.
 
+### Fix format: prefer unified diff over prose
+
+When a `Fix` can be expressed as a concrete textual edit, present it as a fenced code block in **unified diff** syntax with `-` and `+` lines, anchored by enough surrounding context that the reader can locate the change unambiguously (file path or function/class name in a leading line, line numbers when known). Prose alone leaves the proposed change ambiguous and forces the reader to reconstruct your intent.
+
+````
+```diff
+--- a/path/to/file.ext
++++ b/path/to/file.ext
+@@ context @@
+- old line
++ new line
+```
+````
+
+When the change is genuinely structural and cannot be reduced to a single diff—introducing a new module, redrawing a boundary, replacing a primitive with a domain-primitive family across many sites—explain the structural change in prose **and** include at least one diff snippet that illustrates a representative call site or signature change. Pure prose with no anchoring diff is the lower bound, used only when no single edit captures the change. Vague phrases like "refactor to ..." / "extract a ..." / "use a proper abstraction" without a diff are forbidden—they are the same as no Fix.
+
 ### Postcondition: persist the review before returning
 
 A review that exists only in the session message stream evaporates when the session ends. Every successful review **must be persisted to a file** before you return; the file path is part of your return value. This is a binding postcondition—violating it is a supplier-side bug.

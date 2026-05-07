@@ -87,37 +87,102 @@ For each defect:
 **Issue**: [Concise description of the defect; include the triggering input or ordering when relevant]
 **Cause**: [Specific line / assumption / missing check that produces the defect]
 **Impact**: [Concrete consequence—data loss, security exposure, hang, leak, wrong result for input X]
-**Fix**: [Minimal correct change. Reference the specific line.]
+**Fix**: [The minimal correct change, expressed as a **unified diff** in a fenced \`diff\` code block whenever the change is a concrete edit. Anchor the diff with file path and enough surrounding context that the reader can locate it unambiguously. Use prose only when the change cannot be reduced to a diff—and even then, accompany the prose with at least one representative diff snippet. Vague phrases like "refactor to ..." / "use a proper ..." without a diff are forbidden.]
 
 **Example 1 (SQL Injection — concrete)**:
 **Issue**: User-supplied `orderId` interpolated directly into the SQL query in `OrderRepository.findById` (line 42)
-**Cause**: Raw SQL string concatenation: `` `SELECT * FROM orders WHERE id='${orderId}'` ``. No parameterization, no escaping. Surrounding code uses the ORM's parameterized API; this site bypasses it.
+**Cause**: Raw SQL string concatenation. No parameterization, no escaping. Surrounding code uses the ORM's parameterized API; this site bypasses it.
 **Impact**: Attacker can dump or modify the orders table by sending `'; DROP TABLE orders; --` as `orderId`. Production-exploitable with current request signature.
-**Fix**: Replace with the parameterized API used elsewhere: `repo.query('SELECT * FROM orders WHERE id = ?', [orderId])`. No raw interpolation—remove the only path that reaches the string concatenation branch.
+**Fix**:
+```diff
+--- a/src/data/OrderRepository.ts
++++ b/src/data/OrderRepository.ts
+@@ findById(orderId) @@
+-  return repo.query(`SELECT * FROM orders WHERE id='${orderId}'`);
++  return repo.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+```
 
 **Example 2 (Race Condition)**:
 **Issue**: `incrementBalance(userId, delta)` performs read-modify-write on `balances[userId]` without synchronization (lines 88–92)
-**Cause**: `current = balances[userId]; balances[userId] = current + delta;` runs on a shared map accessed from multiple request handlers concurrently. No lock, no atomic op.
+**Cause**: Shared map accessed from multiple request handlers concurrently. No lock, no atomic op.
 **Impact**: Lost updates under concurrent requests. Two simultaneous `+10` operations on a balance of `0` can leave it at `10` instead of `20`. Data loss is silent and proportional to traffic.
-**Fix**: Replace with an atomic increment primitive: `balances.computeIfPresent(userId, (k, v) -> v + delta)` (Java) or equivalent. If atomicity must span more than one field, take the existing per-user lock used in `transferFunds`.
+**Fix**:
+```diff
+--- a/src/wallet/Balances.java
++++ b/src/wallet/Balances.java
+@@ incrementBalance(userId, delta) @@
+-  long current = balances.get(userId);
+-  balances.put(userId, current + delta);
++  balances.computeIfPresent(userId, (k, v) -> v + delta);
+```
+If atomicity must span more than one field, take the existing per-user lock used in `transferFunds` instead of the per-key atomic—but the read-modify-write must not remain.
 
 **Example 3 (Resource Leak on Error Path)**:
 **Issue**: `parseUpload(stream)` opens the temp file but does not close it when JSON parsing throws (line 31)
-**Cause**: `fd = openTemp(); writeStream(fd, stream); parsed = JSON.parse(readAll(fd));` — the `JSON.parse` call can throw, and the surrounding code has no `try/finally` or RAII wrapper.
+**Cause**: The `JSON.parse` call can throw, and the surrounding code has no `try/finally` or RAII wrapper.
 **Impact**: One leaked file descriptor per invalid upload. Under attack or buggy clients the process exhausts its fd limit and starts rejecting all incoming connections.
-**Fix**: Wrap the temp file in a `try/finally` (or use the language's resource-scoping construct) and close `fd` in the finally branch. The success path keeps its existing close.
+**Fix**:
+```diff
+--- a/src/upload/parseUpload.ts
++++ b/src/upload/parseUpload.ts
+@@ parseUpload(stream) @@
+-  const fd = openTemp();
+-  writeStream(fd, stream);
+-  const parsed = JSON.parse(readAll(fd));
+-  close(fd);
+-  return parsed;
++  const fd = openTemp();
++  try {
++    writeStream(fd, stream);
++    return JSON.parse(readAll(fd));
++  } finally {
++    close(fd);
++  }
+```
 
 **Example 4 (Fail-Open on Auth Error)**:
 **Issue**: `requireAdmin(user)` swallows exceptions from the role lookup and returns `true` on failure (line 17)
-**Cause**: `try { return roles.lookup(user).contains("admin"); } catch (e) { return true; }` — the catch was added to "make tests pass" when the role service flapped.
+**Cause**: The catch was added to "make tests pass" when the role service flapped, and turned into a fail-open.
 **Impact**: Any transient failure of the role service grants admin access to every authenticated user for the duration of the outage. Privilege escalation.
-**Fix**: Fail closed. On lookup failure, propagate the error or return `false`; never `true`. If the service flaps, the correct fix is upstream (cache, retry, circuit breaker), not granting admin on error.
+**Fix**:
+```diff
+--- a/src/auth/requireAdmin.ts
++++ b/src/auth/requireAdmin.ts
+@@ requireAdmin(user) @@
+-  try {
+-    return roles.lookup(user).contains("admin");
+-  } catch (e) {
+-    return true;
+-  }
++  return roles.lookup(user).contains("admin");
+```
+Let the lookup error propagate (fail closed). If the role service flaps, the correct fix is upstream (cache / retry / circuit breaker), not granting admin on error.
 
 **Example 5 (Contract Drift — Defensive Duplication Symptom)**:
 **Issue**: Three call sites of `getUser(id)` each null-check the result, but `getUser` is typed to return `User` (not `User | null`). One site (line 204) forgot the null-check and crashes on missing users.
 **Cause**: The implementation returns `null` on miss while the type declares `User`. The type signature lies. The duplicated null-checks at the call sites are a symptom of an undeclared null contract.
 **Impact**: Crash on missing user at line 204. Two other sites work only by accident (they happened to add a guard).
-**Fix**: Decide the contract at the design layer. If "missing user" is a valid outcome, change the signature to `User | null` and remove the lie. If not, throw a typed error and remove the call-site null-checks. **This issue likely belongs to `critic-design-review`**—the contract shape is ambiguous, not just one line.
+**Fix**: This is a contract-shape decision and the structural fix belongs in `critic-design-review`. Decide one of two paths:
+
+1. "Missing user" is a valid outcome → change the signature and remove the lie:
+   ```diff
+   --- a/src/users/getUser.ts
+   +++ b/src/users/getUser.ts
+   -function getUser(id: UserId): User { ... return null; ... }
+   +function getUser(id: UserId): User | null { ... return null; ... }
+   ```
+   Then keep the call-site null-checks; line 204 must add one.
+
+2. "Missing user" is a precondition violation → throw, drop the null returns, and delete the defensive guards:
+   ```diff
+   --- a/src/users/getUser.ts
+   +++ b/src/users/getUser.ts
+   -  if (!row) return null;
+   +  if (!row) throw new UserNotFound(id);
+   ```
+   Then remove the null-checks at every call site (they no longer serve a contract).
+
+Either is a fix; mixing them—the current state—is the bug.
 
 **Example 6 (Exception Swallowing — generic)**:
 **Issue**: `loadUserPreferences(userId)` wraps the persistence call in `try { ... } catch (e) { return DEFAULT_PREFERENCES; }` (line 47). All errors—database connection failure, schema mismatch, deserialization error, real "user not found"—collapse into a silent fall-through to defaults. No log, no re-throw, no typed distinction.
