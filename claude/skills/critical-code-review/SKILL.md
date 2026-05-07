@@ -19,7 +19,7 @@ agent: code-critic
    - Hidden complexity: Code that appears simple but masks difficult edge cases
    - Production risks: Error handling gaps, resource leaks, scalability bottlenecks
    - Contract violations (Design by Contract): Preconditions / postconditions / invariants left implicit; functions silently coerce or "repair" invalid input instead of rejecting it; defensive null/range checks scattered across callers because the callee's contract is undefined; mutable shared state without invariant guarantees; type signatures that lie (return `T` but actually `T | null | Error`)
-   - Insecure-by-design defaults (Secure by Design): Trust boundaries unclear or unenforced; defaults are permissive rather than restrictive (auth-off, world-readable, allow-list missing); least-privilege violated (broad scopes, root processes, over-broad DB grants); failure modes fail open (catch-and-continue on auth/crypto errors); secrets embedded in code, logs, error messages, or client bundles; input trusted past the boundary instead of validated/parsed at it; cryptographic primitives hand-rolled or misused (custom hashing, ECB, predictable IVs, missing constant-time compare)
+   - Secure by Design violations (Johnsson/Deogun/Sawano): Primitive types (`String`, `int`) carrying domain meaning across boundaries instead of **domain primitives** that enforce invariants at construction; untrusted input flowing into the interior without being parsed at the boundary in the order *origin → size → lexical → syntax → semantics*; secrets passed as plain strings instead of **read-once** wrappers; entities exposed by reference rather than as immutable **snapshots**; logging that captures untrusted input or secret material; reliance on **implicit contracts** (magic strings, undocumented invariants, "the caller knows") instead of types that make invalid state unrepresentable; side-effects threaded through the domain instead of pushed to the edge
 
 3. **Trace to root causes**: For each issue, ask:
    - Why does this problem exist?
@@ -102,11 +102,11 @@ For each critical issue:
 **Impact**: Callers that forget to validate ship silent failures to production—refund flows record successful charges that never happened. Reconciliation breaks. Every caller now needs defensive checks duplicating logic that belongs in one place.
 **Fix**: Make the precondition explicit at the contract boundary: reject `amount <= 0` with a typed error (or use a non-negative type). Remove caller-side defensive checks—the contract enforces it once. If the type system supports it, encode `PositiveAmount` as a parsed type so invalid values can't reach the function at all.
 
-**Example 6 (Insecure Default — Secure by Design)**:
-**Issue**: New admin API endpoint deployed with `requireAuth` defaulting to `false`; opt-in via per-route flag
-**Root Cause**: Framework defaults to "open, then lock down per route" instead of "closed, then permit per route." Reviewer must remember to flip the flag for every new endpoint—a human checklist where the failure mode is silent exposure.
-**Impact**: Any new endpoint added without the explicit flag is publicly callable. CVE-shaped class of bugs that grows linearly with developer headcount. Detection requires scanning every PR; one miss is a breach.
-**Fix**: Invert the default. `requireAuth` is `true` for every route; explicit `public: true` is required to expose one. Make the insecure choice loud and reviewable, not the default. This eliminates the entire bug class structurally instead of relying on per-PR vigilance.
+**Example 6 (Primitive Obsession at the Boundary — Secure by Design)**:
+**Issue**: `placeOrder(customerId: String, quantity: Int, sku: String)` accepts raw primitives all the way from the controller through services to the persistence layer; validation is scattered across each layer (and missed in some)
+**Root Cause**: Domain meaning is carried by primitive types instead of domain primitives. There is no `CustomerId`, `Quantity`, or `Sku` whose constructor enforces invariants. With no parse step at the boundary, every interior caller must re-validate—and each one validates differently, or not at all. Invalid state is representable everywhere, so it eventually appears everywhere.
+**Impact**: Negative quantities, malformed SKUs, and SQL-shaped customer IDs reach business logic and storage whenever a single validation site is forgotten. The bug class (invalid input flowing past the boundary) grows monotonically with every new caller; security depends on perfect human recall.
+**Fix**: Introduce domain primitives. `Quantity` constructor rejects values `<= 0`; `CustomerId` rejects non-UUID input; `Sku` rejects malformed strings. At the boundary, parse untrusted input in the order *origin → size → lexical → syntax → semantics* and reject early; emit domain primitives or an error. Interior signatures accept only domain primitives, so invalid states become unrepresentable and downstream defensive validation can be deleted—the type system enforces the contract once.
 
 End with a **Priority Assessment**: What must be fixed before merge? What should be addressed soon? What can be deferred?
 
