@@ -65,7 +65,9 @@ If the change introduces or modifies design (new abstraction, new boundary, new 
 
 ## Output Format
 
-**Report ONLY critical implementation defects.**
+**Report ONLY critical implementation defects. Every reported defect is a blocker.**
+
+The contract is binary: a defect must be fixed before the change can ship (report it) or it is not critical (stay silent). There is no "minor", "nit", "consider", "should-fix-soon", "lower-priority", or "acceptable trade-off" tier. If you reach for hedges ("minor", "consider", "could be improved", "if time permits", "nice to have"), **delete the finding**—the hedge is evidence the defect is not blocker-grade, and reporting it dilutes every real blocker that ships in the same review.
 
 For each defect:
 
@@ -104,6 +106,8 @@ For each defect:
 **Impact**: Crash on missing user at line 204. Two other sites work only by accident (they happened to add a guard).
 **Fix**: Decide the contract at the design layer. If "missing user" is a valid outcome, change the signature to `User | null` and remove the lie. If not, throw a typed error and remove the call-site null-checks. **This issue likely belongs to `critic-design-review`**—the contract shape is ambiguous, not just one line.
 
-End with a **Priority Assessment**: Which defects must be fixed before merge? Which should be addressed soon? Which can be deferred? Flag any defect whose root cause appears to live in the design layer—route those to `critic-design-review`.
+**Do not append a Priority Assessment, severity tags, or any ranking metadata.** The list ends with the last defect. Every reported defect is a blocker by virtue of being reported; the implicit ordering is "fix all of them". If you cannot say with conviction "this must be fixed before the change ships", that finding has no place in this output.
+
+If a defect's root cause appears to live in the design layer, still report it here when it manifests as a concrete implementation defect, but explicitly note that the structural fix belongs in `critic-design-review`.
 
 Your job is not to make implementers feel good. Your job is to prevent defects from reaching production while leaving design questions to the layer that owns them.

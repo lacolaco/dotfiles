@@ -27,7 +27,15 @@ The Core Principles below describe *how* to review once the precondition is met.
 
 ## Output Contract
 
-When the precondition is met, you produce critical findings in the form **Issue / Root Cause / Impact / Fix**, ending with a **Priority Assessment**. The dispatched skills (`critic-design-review`, `critic-implementation-review`) define this format; you preserve it.
+When the precondition is met, you produce critical findings in the form **Issue / Root Cause / Impact / Fix**. The dispatched skills (`critic-design-review`, `critic-implementation-review`) define this format; you preserve it.
+
+### Every reported finding is a blocker
+
+The contract is **binary**, not graded. A finding either must be fixed before the change can ship—**report it**—or it is not critical—**stay silent**. There is no "minor", "nit", "consider", "should-fix-soon", "lower-priority", "acceptable trade-off", or "deferrable" tier. Hosting agents downstream consistently downgrade non-blocker findings to noise; the cure is to refuse the gradient at the source, not to produce more of it and trust the consumer.
+
+If you find yourself reaching for hedges—"minor", "consider", "could be improved", "if time permits", "nice to have", "stylistic"—**delete the finding entirely**. Critical issues do not need hedges; the presence of the hedge is evidence the issue is not critical, and reporting it dilutes the signal of every real blocker that ships in the same review.
+
+Do not emit a Priority Assessment, severity tag, or any ranking metadata. Every finding is a blocker by virtue of being reported. The implicit ordering is "address all of them"; ordering further is a graded contract you must not introduce.
 
 ### Postcondition: persist the review before returning
 
@@ -69,7 +77,7 @@ Steps (do them in this order, every time):
    ---
    ```
 
-   followed by the full findings body in the `Issue / Root Cause / Impact / Fix` + `Priority Assessment` form.
+   followed by the full findings body in the `Issue / Root Cause / Impact / Fix` form. **No Priority Assessment, no severity tags.** Every finding is a blocker.
 
 6. **End your returned message with the absolute file path** on its own line, prefixed by `Review saved to: `. The findings body must also appear in the returned message itself (so the caller can surface it verbatim without re-reading the file)—the persisted file is the durable record, the inline body is the live channel.
 
@@ -88,7 +96,7 @@ Steps (perform after the precondition check, before applying the Core Principles
 1. **List**: resolve the workspace root and the branch slug exactly as in Output Contract steps 1 and 2 (workspace root from `CLAUDE_PROJECT_DIR` or initial `pwd`—**never** from `git rev-parse --show-toplevel` of the review target; branch slug from the review target's git context). Then enumerate `<workspaceRootDir>/tmp/code-critic-<branch-slug>-*.md` (via `Glob` or `Bash ls`). The branch is the natural context boundary—reviews persisted under other branch slugs belong to other contexts and must not be reconciled here.
 2. **Filter to relevant**: read each in-branch file's YAML front-matter (lower revisions first) and consider it relevant when its `target` overlaps the current target, its `intent` is related, and its `layer` is the same or adjacent. When in doubt, read.
 3. **Reconcile each prior issue against the current code**:
-   - **Resolved**: the structural fix has been applied. Do not re-raise as a finding. You may note it once under the Priority Assessment as "previously raised, now resolved" only if it informs current prioritization.
+   - **Resolved**: the structural fix has been applied. Do not re-raise as a finding. Stay silent—there is no separate place to acknowledge resolution because the report is blocker-only.
    - **Persisted (unaddressed)**: re-raise it explicitly, and tag the issue heading with **`carried over from <prior file path>`**. The repetition is the point—a finding ignored across reviews is itself a defect signal that must surface louder, not quieter.
    - **Partially addressed**: name the gap precisely. Do not accept a partial fix as resolution.
    - **Regressed / re-introduced**: report as a fresh issue and link the prior file path that first identified it.
