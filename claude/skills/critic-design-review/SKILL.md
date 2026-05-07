@@ -26,9 +26,24 @@ When you find a problem, name the underlying foundational failure first (cohesio
 
 1. **Reconstruct the design**: What *shape* does this change introduce or modify? What boundaries does it draw, what contracts does it expose, what abstractions does it add or remove? If the answer is not recoverable from the diff and stated intent, **stop and treat this as a caller-side precondition violation**: list the missing inputs (e.g., the design intent, the constraints driving the shape, which boundary is in scope) and refuse to proceed. A partial review is worse than no review—it mis-locates the defect to the supplier and masks the missing context. Do not produce placeholder findings, generic checklists, or speculative critiques in lieu of the missing context. Resume only after the caller supplies what is required.
 
-2. **Apply the cohesion / coupling lens first**: Does each module have a single focused responsibility? Does each dependency carry the minimum substance needed? Most of the specialized flaws below are downstream symptoms of failures here.
+2. **Read the tests first—they are the primary evidence of design quality**: The tests are how the design is *actually used*; their smells are the most direct, empirical signal of structural problems in the SUT. Production-code-only design critique is indirect and speculative. Before reading the production code, scan the test code for these smells and trace each back to its structural cause:
 
-3. **Identify critical design flaws** (specialized lenses):
+   - **Long or repetitive `arrange` blocks** → low cohesion in the SUT; constructors / factories demanding too much
+   - **Deep mock chains, mock-of-mock setups** → tight coupling; dependency direction inverted; abstractions missing at the boundary
+   - **Test names containing "…and also…", or assertions spanning unrelated facts** → multiple responsibilities in one routine (cohesion failure, CQS violation)
+   - **Tests that read or assert on internal state** → undefined or unobservable contract; the SUT exposes no postcondition the test can target
+   - **Fragile tests broken by unrelated production changes** → coupling to implementation rather than to interface
+   - **Setup growing linearly with each new test case** → OCP failure already visible at the test layer; the Refactor phase was skipped after a recent Green
+   - **Wholesale need for integration tests because units cannot be exercised in isolation** → boundaries not drawn; ports/adapters absent
+   - **Inability to test a behaviour without exposing internals** → encapsulation contradicting the contract; the contract is implicit
+   - **Same helper / fixture used by every test in a module** → shared design liability (a horizontal responsibility that should have been factored)
+   - **Mock setup volume growing with every new test** → SUT receives too many collaborators; dependency surface too wide
+
+   **Rule of thumb**: if the test is hard to write or hard to read, the SUT—not the test—is the defect. Locate the smell in the test, then trace it back to the structural cause in the production design. Cite the smell as evidence in your finding.
+
+3. **Apply the cohesion / coupling lens**: Does each module have a single focused responsibility? Does each dependency carry the minimum substance needed? Most specialized flaws below are downstream symptoms of failures here. Cross-check against the test smells from step 2.
+
+4. **Identify critical design flaws** (specialized lenses):
    - Over-engineering: Premature abstractions, unused flexibility, code for hypothetical futures, frameworks for one-time problems—usually a low-cohesion module pretending to serve futures it does not have
    - Excessive complexity: Solutions more complex than the problem requires—KISS at the design layer
    - Architectural misalignment: Wrong layer, wrong dependency direction, abstraction placed at the wrong boundary—a coupling failure expressed as a layering failure
@@ -37,13 +52,13 @@ When you find a problem, name the underlying foundational failure first (cohesio
    - Secure by Design violations (Johnsson/Deogun/Sawano, 2019): Primitive types (`String`, `int`) carrying domain meaning across boundaries instead of **domain primitives** that enforce invariants at construction (a cohesion failure: domain rules scattered instead of localized in the type); untrusted input flowing into the interior without being parsed at the boundary in the order *origin → size → lexical → syntax → semantics*; secrets passed as plain strings instead of **read-once** wrappers; entities exposed by reference rather than as immutable **snapshots**; logging that captures untrusted input or secret material; reliance on **implicit contracts** (magic strings, undocumented invariants, "the caller knows") instead of types that make invalid state unrepresentable; side-effects threaded through the domain instead of pushed to the edge
    - Local fix masking systemic problem: Special-case handlers that metastasize because the foundation is wrong; the n-th workaround is a signal the structure itself needs to change
 
-3. **Trace to design root causes**: For each issue ask:
+5. **Trace to design root causes**: For each issue ask:
    - Why does this shape exist? What design decision led here?
    - Is this a local patch on top of a structural defect?
    - Would a structural change eliminate an entire class of these issues?
    - Challenge existing structure: "Why does this module exist?" "Is this abstraction justified?" "What if we deleted this layer?"
 
-4. **Provide surgical design feedback**:
+6. **Provide surgical design feedback**:
    - State the issue directly, no hedging
    - Explain the structural cause and why it matters
    - Suggest a fundamental redesign, not a patch
