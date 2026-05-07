@@ -1,52 +1,52 @@
 ---
 name: call-code-critic
-description: "WHEN: ユーザーが現在のコード変更・PR・ファイルに対して code-critic agent による批判的レビューを起動したいとき。`/call-code-critic` で呼ぶ。INPUT: レビュー対象 (コードのパス / diff / PR番号 等) + 変更意図 + レビュー対象レイヤー (design / implementation / both / unspecified)。OUTPUT: code-critic agent を Agent ツールで起動し、返ってきた critical findings を構造のまま提示。"
+description: "WHEN: the user wants to invoke the `code-critic` agent for a critical review of current code, a PR, or specific files (`/call-code-critic`). INPUT: review target (paths / diff / PR number / pasted code) + intent of the change + review layer in scope (`design` / `implementation` / `both` / `unspecified`). OUTPUT: launches the `code-critic` agent via the Agent tool and surfaces its critical findings to the user verbatim, preserving structure and tone."
 user-invocable: true
 ---
 
-## 役割
+## Role
 
-`code-critic` agent を起動するための **エントリポイント**。`code-critic` は Invocation Contract により precondition（レビュー対象コード / 変更意図 / レビュー対象レイヤー）を要求する。本 skill はその precondition を満たした形で agent を呼び出すことだけに責務を持つ。
+This skill is the **entry point** for invoking the `code-critic` agent. The agent declares an Invocation Contract whose precondition is sufficient input from the caller—review target, intent of the change, review layer in scope. This skill exists solely to satisfy that precondition and dispatch the agent.
 
-レビューロジック（Review Layering、High Cohesion / Loose Coupling、OCP、DbC、SbD、Test Smell as Design Signal、`critic-design-review` / `critic-implementation-review` の使い分け）は **すべて agent 側** にある。本 skill は判断しない。
+All review logic—Review Layering, the foundational lenses (High Cohesion / Loose Coupling, Open-Closed Principle, Design by Contract, Secure by Design), Test Smell as Design Signal, the choice between `critic-design-review` and `critic-implementation-review`—lives **inside the agent**. This skill does not critique. It dispatches.
 
-## 手順
+## Procedure
 
-### 1. precondition の充足を確認
+### 1. Verify the Invocation Contract precondition
 
-`code-critic` の Invocation Contract に従い、以下3点が揃っているか確認する。揃っていなければ **agent を起動せず**、`AskUserQuestion` で不足項目を要求してから進む（partial invocation は agent 側でも refuse される）。
+The `code-critic` agent requires three inputs. If any are missing, **do not launch the agent.** Use `AskUserQuestion` to demand the missing items first; partial invocation will be refused by the agent's own Invocation Contract.
 
-- **レビュー対象**: ファイルパス / ディレクトリ / diff / PR 番号 / 貼り付けコードのいずれか、識別可能なスコープ付き
-- **変更意図**: この変更が何を達成しようとしているか。design review なら設計意図と制約、implementation review なら実装が満たすべき contract / signature / invariants
-- **レビュー対象レイヤー**: `design` / `implementation` / `both` / `unspecified` のいずれか。`unspecified` の場合、agent が Review Layering で判断する（両方触るなら design review 先行）
+- **Review target**: file paths, directory, diff, PR number, or pasted code—each in identifiable scope
+- **Intent of the change**: what the change is supposed to accomplish; for design review, the design intent and the constraints driving the shape; for implementation review, the contract / signature / invariants the implementation must satisfy
+- **Layer in scope**: `design` / `implementation` / `both` / `unspecified` (when `unspecified`, the agent decides via Review Layering—if the change touches both layers, design review runs first)
 
-precondition が揃わないまま agent を起動するな。「足りない部分は agent が自分で判断する」と推定して起動するのは Invocation Contract 違反。
+Do not assume the agent will "figure out" missing inputs. Demanding them up front is the contract; bypassing it relocates a caller-side defect to the supplier.
 
-### 2. Agent ツールで code-critic を起動
+### 2. Launch `code-critic` via the Agent tool
 
-`Agent` ツールを `subagent_type: code-critic` で呼び出す。プロンプトには precondition の3項目を以下の構造で含める:
+Call the `Agent` tool with `subagent_type: code-critic`. Embed the three precondition items in the prompt with this structure:
 
 ```
 ## Review target
-<file paths / diff / PR number / pasted code、識別可能なスコープ>
+<file paths / diff / PR number / pasted code, with identifiable scope>
 
 ## Intent of the change
-<変更が何を達成しようとしているか。design review なら設計意図と制約、
- implementation review なら満たすべき contract / signature / invariants>
+<what the change accomplishes; for design review, the design intent and constraints;
+ for implementation review, the contract / signature / invariants to satisfy>
 
 ## Layer in scope
 design | implementation | both | unspecified
 ```
 
-`description` には `Critical review via code-critic` 等、タスクが識別可能な短い文字列を渡す。
+Pass a short, identifying `description` such as `Critical review via code-critic`.
 
-### 3. agent の出力をそのまま提示
+### 3. Surface the agent's output verbatim
 
-agent が返す critical findings（`Issue` / `Root Cause` / `Impact` / `Fix` の構造と末尾の `Priority Assessment`）は **要約・取捨選択・トーン緩和をせず**、構造を保ったままユーザーに提示する。`code-critic` の brutal-honest トーンを薄めない。
+The agent returns critical findings in the form `Issue` / `Root Cause` / `Impact` / `Fix`, ending with a `Priority Assessment`. Present this output **as-is**: no summarization, no cherry-picking, no tone softening. The agent's brutal-honest register is the value—do not dilute it.
 
-## 制約
+## Constraints
 
-- 本 skill は **agent を起動するだけ** が責務。critique 内容を skill 内で生成するな
-- precondition が不足したまま agent を起動するな。partial invocation は agent の Invocation Contract に refuse される
-- agent の出力を「やわらかく」言い換えるな
-- レビュー対象レイヤーの判断を skill 内で勝手に決めるな。`unspecified` で渡し、agent の Review Layering に委ねるのが既定
+- The skill **only dispatches**. Do not generate critique content inside this skill.
+- Do not launch the agent without the three precondition items satisfied. Partial invocation is refused by the agent.
+- Do not paraphrase, summarize, or soften the agent's findings before presenting them.
+- Do not pre-decide the review layer when it is genuinely unclear; pass `unspecified` and let the agent's Review Layering route correctly.
