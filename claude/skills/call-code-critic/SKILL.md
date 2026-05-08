@@ -1,17 +1,17 @@
 ---
 name: call-code-critic
-description: "WHEN: the user wants a critical review by the `code-critic` agent. The skill gathers the agent's required Invocation Contract inputs (review target, intent, layer), dispatches the agent via the Agent tool, and drives the **address-then-re-review** loop until no actionable findings remain or the user explicitly defers what is left."
+description: "WHEN: the user wants a critical review by the `code-critic` agent. The skill gathers the agent's required Invocation Contract inputs (review target, intent, layer), dispatches the agent via the Agent tool, and drives the **address-then-resubmit** loop until the agent returns an `Approved` verdict or the user explicitly defers what is left."
 user-invocable: true
 ---
 
 ## Role
 
-Entry seam between the user and the `code-critic` agent, **and owner of the review iteration loop**:
+Entry seam between the user and the `code-critic` agent, **and owner of the review submission loop**. Model the cycle on a GitHub PR review:
 
-1. Gather the four Invocation Contract inputs and dispatch the agent.
-2. Drive the **address-then-re-review** loop until the agent returns no actionable findings or the user explicitly defers what remains. A single invocation is **not** a complete review.
+1. Gather the four Invocation Contract inputs and **request a review** (dispatch the agent).
+2. Drive the **address-then-resubmit** loop. Each agent return is a **review submission** with a single-line verdict (`Approved` or `Request changes`). Iterate until the verdict is `Approved`, or the user explicitly defers what remains. A single submission is **not** a complete review.
 
-All review logic—Review Layering, foundational lenses, the choice between `critic-design-review` and `critic-implementation-review`—lives **inside the agent**. The skill never critiques. But it owns the cycle—findings without follow-through are wasted output.
+All review logic—Review Layering, foundational lenses, the choice between `critic-design-review` and `critic-implementation-review`—lives **inside the agent**. The skill never critiques. But it owns the cycle—line comments without follow-through are wasted output.
 
 ## Procedure
 
@@ -27,7 +27,7 @@ From the **host agent's own context** (do not ask the user):
 
 - **Workspace root for persistence**: absolute path of the Claude Code session's primary working directory. The host agent knows this from its system context. In a multi-project workspace, the user's intended workspace root may be an ancestor of the review target; pass the **ancestor**, not the review target. Resolve and validate this absolute path **once, in this skill, before launching the agent**. The Invocation Contract requires the caller to supply the path explicitly; the agent refuses if it is missing.
 
-### 2. Launch `code-critic` for the initial iteration
+### 2. Request the initial review
 
 Call the `Agent` tool with `subagent_type: code-critic`. Pass the four items in this structure:
 
@@ -48,52 +48,55 @@ design | implementation | both | unspecified
 
 Pass `description: Critical review via code-critic` and optionally `name: code-critic-<branch-slug>`.
 
-**Capture the agent's ID** from the response (`agentId: <id>` / `SendMessage with to: '<id>'`). This ID is the handle for every subsequent iteration—do not lose it.
+**Capture the agent's ID** from the response (`agentId: <id>` / `SendMessage with to: '<id>'`). This ID is the handle for every resubmission—do not lose it.
 
-### 3. Drive the address-then-re-review loop (mandatory)
+### 3. Drive the address-then-resubmit loop (mandatory)
 
-The agent's first response is **never the end**. Iterate until termination.
+Each agent return is a **review submission** beginning with a verdict line:
 
-For each iteration:
+- `Approved` — no blockers. **Loop terminates.** No file is persisted by the agent. Surface the verdict to the user and stop the loop.
+- `Request changes` — one or more line-comment blockers, persisted to `tmp/code-critic-<branch-slug>-<rev>.md`. Continue with steps below.
 
-1. **Surface the agent's findings to the user verbatim** (`Issue / Root Cause / Impact / Fix`). Every reported finding is a blocker—do not summarize, rank, or soften. Note the persisted file path (`Review saved to: <path>`).
-2. **Triage with the user** for each finding via `AskUserQuestion`. Triage is binary:
+For a `Request changes` submission:
+
+1. **Surface the agent's verdict and line comments to the user verbatim** (`Issue / Root Cause / Impact / Fix`). Every line comment is a blocker—do not summarize, rank, or soften. Note the persisted file path (`Review saved to: <path>`).
+2. **Triage with the user** for each thread via `AskUserQuestion`. Triage is binary:
    - **Address**: apply the structural fix the agent prescribed. Commit if appropriate.
-   - **Reject (with reason)**: only when the user provides a domain reason that makes the finding non-applicable. "Later" or "minor" is **not** a reason.
+   - **Reject (with reason)**: only when the user provides a domain reason that makes the thread non-applicable. "Later" or "minor" is **not** a reason.
 3. **Apply the addressed fixes**.
-4. **Re-review via `SendMessage` against the captured agent ID**—do **not** re-launch a fresh `Agent`. Resuming preserves the agent's working memory of the prior pass. Message body focuses on the delta:
+4. **Resubmit via `SendMessage` against the captured agent ID**—do **not** re-launch a fresh `Agent`. Resuming preserves the agent's working memory of the prior submission. Message body focuses on the delta:
 
    ```
-   ## Iteration N+1: addresses findings from <prior file path>
+   ## Resubmission addressing <prior file path>
 
    ## Workspace root for persistence
    <same absolute path passed at initial dispatch>
 
-   ## Changes since prior review
-   <diff, paths, or summary referencing the prior issues>
+   ## Changes since prior submission
+   <diff, paths, or summary referencing the prior threads>
 
-   ## User decisions on prior findings
-   - <prior issue title> → Address (fix applied as: <one-line summary>)
-   - <prior issue title> → Reject (reason: <user-supplied domain reason>)
+   ## User decisions on prior threads
+   - <prior thread title> → Address (fix applied as: <one-line summary>)
+   - <prior thread title> → Reject (reason: <user-supplied domain reason>)
    ```
 
-   The agent reconciles via Prior Review Awareness against the latest persisted file, applies its principles to the delta, and persists `code-critic-<branch-slug>-<rev+1>.md`.
+   The agent reconciles open threads against the latest persisted file, applies its principles to the delta, and returns the next submission—either `Approved` (terminate) or `Request changes` with `code-critic-<branch-slug>-<rev+1>.md` (loop continues).
 
-   **Fallback**: if the agent ID is no longer addressable, launch a fresh `Agent` as in step 2, expanding `Intent of the change` with the iteration number and the prior file path. Prior Review Awareness still reconciles via the persisted file; in-conversation memory is lost—accept only as fallback.
+   **Fallback**: if the agent ID is no longer addressable, launch a fresh `Agent` as in step 2, expanding `Intent of the change` with the resubmission context and the prior file path. The agent's `Reconcile prior threads` will still work via the persisted file; in-conversation memory is lost—accept only as fallback.
 
-**Termination condition** (loop exits only when **both** hold):
+**Termination condition** (loop exits when **either** holds):
 
-- The agent returns **no new findings** in the current iteration.
-- Every persisted (carried-over) finding has a recorded outcome (Address with fix applied, or Reject with explicit user-supplied reason).
+- The agent returns the `Approved` verdict (no open threads, no new blockers).
+- Every open thread from the latest `Request changes` submission has a recorded user outcome (Address with fix applied, or Reject with explicit user-supplied reason).
 
-There is no "deferred" state. The upstream contract guarantees every reported finding is a blocker.
+There is no "deferred" state. The upstream contract guarantees every line comment is a blocker.
 
-When the loop exits, summarize the final state to the user: which iterations ran, which findings were addressed, which were rejected (with reasons), and the path of the latest persisted review.
+When the loop exits, summarize the final state to the user: which submissions ran, which threads were addressed, which were rejected (with reasons), and—if applicable—the path of the latest persisted submission. If the terminal verdict is `Approved`, state that explicitly.
 
 ## Constraints
 
-- The skill **gathers, dispatches, and drives the iteration loop**. It does not critique or shape the agent's output.
-- A single invocation is **not** a complete review. Exiting after one pass without a recorded user decision is a contract violation.
-- The user owns the Address / Reject decision for each finding. Do not auto-defer or auto-reject.
+- The skill **gathers, dispatches, and drives the submission loop**. It does not critique or shape the agent's output.
+- A single submission is **not** a complete review. Exiting after one pass without either an `Approved` verdict or a recorded user decision per thread is a contract violation.
+- The user owns the Address / Reject decision for each thread. Do not auto-defer or auto-reject.
 - Apply structural fixes (per the agent's `Fix` text), not surface-level textual patches.
-- **Capture the initial agent ID** and use `SendMessage` for every re-review. Re-launching per iteration is wasteful; only fall back if the captured ID is no longer addressable.
+- **Capture the initial agent ID** and use `SendMessage` for every resubmission. Re-launching per submission is wasteful; only fall back if the captured ID is no longer addressable.
