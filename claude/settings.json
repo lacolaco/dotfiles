@@ -20,12 +20,8 @@
       "Bash(sh:*)",
       "Bash(for *)",
       "Bash(* &)",
-      "Bash(* echo \"---\" *)",
       "Bash(bash:*)",
-      "Bash(sed *)",
       "Bash(find * -exec *)",
-      "Bash(git -C:*)",
-      "Bash(gh api graphql:*)",
       "Bash(gh api -X PUT*)",
       "Bash(gh api -X POST*)",
       "Bash(gh api -X DELETE*)",
@@ -37,7 +33,6 @@
       "Bash(git add -A)",
       "Bash(git add .)",
       "Bash(pnpm * -g)",
-      "Bash(gh pr merge * --delete-branch*)",
       "Bash(gh * --admin)",
       "Bash(npx vitest:*)",
       "Bash(pnpm vitest:*)",
@@ -57,13 +52,25 @@
       "Bash(gh pr merge *)"
     ]
   },
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "terminal-notifier -message '承認待ちです' -title 'Claude Code' -activate \"${__CFBundleIdentifier:-com.apple.Terminal}\""
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "session-handover@lacolaco-plugins": true,
     "protect-main-branch@lacolaco-plugins": true,
     "example-skills@anthropic-agent-skills": true,
-    "kokoro-tts@lacolaco-plugins": true,
-    "retrospective@lacolaco-plugins": true
+    "retrospective@lacolaco-plugins": true,
+    "kokoro-tts@lacolaco-plugins": true
   },
   "extraKnownMarketplaces": {
     "lacolaco-plugins": {
@@ -79,21 +86,14 @@
       }
     }
   },
-  "hooks": {
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "terminal-notifier -message '承認待ちです' -title 'Claude Code' -activate \"${__CFBundleIdentifier:-com.apple.Terminal}\""
-          }
-        ]
-      }
-    ]
-  },
   "language": "Japanese",
   "alwaysThinkingEnabled": true,
   "effortLevel": "xhigh",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "autoMemoryEnabled": false,
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true
 }
