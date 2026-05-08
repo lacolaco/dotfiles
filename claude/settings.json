@@ -70,7 +70,8 @@
     "session-handover@lacolaco-plugins": true,
     "protect-main-branch@lacolaco-plugins": true,
     "example-skills@anthropic-agent-skills": true,
-    "retrospective@lacolaco-plugins": true
+    "retrospective@lacolaco-plugins": true,
+    "kokoro-tts@lacolaco-plugins": true
   },
   "extraKnownMarketplaces": {
     "lacolaco-plugins": {
