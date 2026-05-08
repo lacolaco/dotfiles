@@ -45,17 +45,23 @@ Approved — <short identifier of what was reviewed>: no blockers.
 
 ### When the verdict is `Request changes`
 
-State the verdict, then surface every finding inline as a **line comment** in the form `Issue / Root Cause / Impact / Fix`, then persist the same body to a file (procedure below). The file path is part of your return value.
+State the verdict, then surface every finding inline as a **line comment** in the **RRR format** (Adrienne Tacke, *Looks Good to Me: Constructive Code Reviews*, Manning 2024), then persist the same body to a file (procedure below). The file path is part of your return value.
+
+#### Line comment format: Request / Rationale / Result
+
+Each line comment has exactly three parts, in this order:
+
+1. **Request** — the concrete action you are asking the author to take. Action-first, imperative, unambiguous. Whenever the change is a textual edit, the Request **includes a unified diff** in a fenced `diff` code block, anchored by file path and surrounding context. When the change is structural and cannot be reduced to a single diff, explain in prose **and** include at least one representative diff snippet. Vague phrases like "refactor to ..." / "extract a ..." without a diff are forbidden.
+2. **Rationale** — *why* the request must be honored. Name the structural cause and the concrete consequence in the same paragraph: the principle violated (HCLC / OCP / DbC / SbD / YAGNI / KISS), the specific defect mechanism, and the cost of leaving it as-is (data loss / silent failure / privilege escalation / contract drift / etc.). The Rationale carries the weight that "Issue + Root Cause + Impact" used to carry separately.
+3. **Result** — the post-condition state the author should be able to observe once the Request is applied. What the type system, the tests, or the runtime now guarantees that they did not before. The Result makes the goal of the Request verifiable.
+
+The order is non-negotiable. Action-first framing (Request → Rationale → Result) is constructive—it tells the author *what to do* before *why*, and ends on the *outcome they're moving toward*. Problem-first framing ("here is what's wrong") is what graded reviews and hedged comments grow on top of.
 
 #### Every line comment is a blocker
 
 The contract is binary, not graded. A finding either must be fixed before the change can ship—**report it**—or it is not critical—**stay silent**. There is no "minor", "nit", "consider", "should-fix-soon", "lower-priority", or "acceptable trade-off" tier.
 
 If you reach for hedges—"minor", "consider", "could be improved", "if time permits", "nice to have", "stylistic"—**delete the comment entirely**. The hedge is evidence the issue is not blocker-grade; reporting it dilutes every real blocker. Do not emit Priority Assessment, severity tags, or any ranking metadata.
-
-#### Fix format: prefer unified diff over prose
-
-When a `Fix` can be expressed as a concrete textual edit, present it as a fenced `diff` code block with `-`/`+` lines, anchored by file path and surrounding context. When the change is structural and cannot be reduced to a single diff, explain in prose **and** include at least one diff snippet illustrating a representative call site or signature. Vague phrases like "refactor to ..." / "extract a ..." without a diff are forbidden.
 
 #### Persist procedure
 
@@ -78,7 +84,7 @@ When a `Fix` can be expressed as a concrete textual edit, present it as a fenced
    ---
    ```
 
-   Followed by the line-comments body (`Issue / Root Cause / Impact / Fix`). No Priority Assessment, no severity tags.
+   Followed by the line-comments body in **Request / Rationale / Result** format. No Priority Assessment, no severity tags.
 
 6. **End your returned message** with `Review saved to: <absolute path>` on its own line. The line-comments body must also appear in the returned message verbatim.
 

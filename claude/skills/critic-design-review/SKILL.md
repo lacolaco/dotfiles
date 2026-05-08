@@ -65,28 +65,32 @@ When you find a problem, name the underlying foundational failure first; the spe
 
 ## Output Format
 
-**Report ONLY critical design issues. Every reported issue is a blocker.** The contract is binary—no "minor", "consider", "acceptable trade-off" tier. Hedges signal the issue is not blocker-grade; delete them.
+**Report ONLY critical design issues. Every reported line comment is a blocker.** The contract is binary—no "minor", "consider", "acceptable trade-off" tier. Hedges signal the issue is not blocker-grade; delete them.
 
-For each issue:
+Each line comment uses the **RRR format** (Adrienne Tacke, *Looks Good to Me*, Manning 2024)—action-first, three parts, no other tier:
 
-**Issue**: [Concise description of the design problem]
-**Root Cause**: [What design decision created this; why the shape is wrong]
-**Impact**: [Concrete structural consequences—maintenance burden, future bug classes, security exposure, contract ambiguity]
-**Fix**: [The fundamental redesign needed. Whenever expressible as a concrete edit, present a **unified diff** in a fenced `diff` block, anchored with file path and surrounding context. When genuinely architectural, explain in prose **and** include at least one diff snippet illustrating a representative call site or signature. "Introduce an abstraction" / "refactor to a proper boundary" without a diff is the same as no Fix.]
+**Request**: [The concrete action the author must take. Imperative, unambiguous. Whenever expressible as a textual edit, **include a unified diff** in a fenced `diff` block anchored with file path and surrounding context. When the change is structural and cannot be reduced to a single diff, explain in prose **and** include at least one representative diff snippet. Vague phrases like "introduce an abstraction" / "refactor to a proper boundary" without a diff are forbidden.]
+**Rationale**: [Why the request must be honored. Name the design failure (cohesion / coupling / OCP / DbC / SbD / YAGNI / KISS) and the concrete consequence in the same paragraph: the principle violated, the structural cause, and the cost of leaving it as-is (maintenance burden, future bug classes, security exposure, contract ambiguity).]
+**Result**: [The post-condition state the author should observe once the request is applied. What the type system, the boundary, or the contract now guarantees that it did not before. Makes the goal of the request verifiable.]
 
 ### Examples
 
 **Over-engineering**:
-**Issue**: Generic "Strategy" pattern with plugin system for a single payment provider
-**Root Cause**: Anticipated "future requirements" for multiple providers despite a clear current scope of one
-**Impact**: 300+ lines of abstraction vs 50 lines of direct implementation. Maintenance burden, debugging complexity, zero current benefit.
-**Fix**: Delete the abstraction layer. Implement direct integration. Add abstraction only when a second provider is an actual requirement—YAGNI.
+**Request**: Delete the Strategy abstraction and the plugin registry. Replace with a direct call to the single payment provider's SDK in `PaymentService`.
+
+```diff
+--- a/src/payments/PaymentService.ts
++++ b/src/payments/PaymentService.ts
+-  const provider = providerRegistry.resolve(req.providerId);
+-  return provider.charge(req);
++  return stripe.charges.create(req);
+```
+
+**Rationale**: YAGNI failure. The pattern was added in anticipation of "future requirements" for multiple providers, but the current scope is exactly one. 300+ lines of abstraction sit in front of 50 lines of real work; every change touches the abstraction *and* the only implementation, doubling the cost of every PR. Premature abstraction is itself a low-cohesion module pretending to serve futures it does not have.
+**Result**: One file, one provider call, zero indirection. When a second provider becomes a real requirement (not hypothetical), the abstraction can be re-introduced from two concrete data points instead of guessed shapes.
 
 **Implicit Contract — Design by Contract**:
-**Issue**: `chargeCard(amount: Number)` accepts negative and zero amounts, silently no-ops, and returns `success: true`. No `require` / `ensure` is stated.
-**Root Cause**: The contract is implicit. A precondition violation—the **caller's** responsibility—is being silently absorbed and reported as success. The duplicated guard each caller grows is the symptom of the missing contract.
-**Impact**: Callers that forget the defensive check ship silent failures—refund flows record successful charges that never happened. Reconciliation breaks.
-**Fix**: Encode the precondition in the type system so invalid input cannot reach the routine.
+**Request**: Encode the precondition `amount > 0` in the type system. Introduce a `PositiveAmount` domain primitive whose constructor rejects non-positive values, change `chargeCard` to accept `PositiveAmount` instead of `number`, and delete every caller-side defensive guard.
 
 ```diff
 --- a/src/payments/PositiveAmount.ts
@@ -115,13 +119,11 @@ For each issue:
 +}
 ```
 
-Caller-side defensive checks are then deleted; bug ownership is unambiguous.
+**Rationale**: Design by Contract violation. `chargeCard(amount: number)` silently absorbs a precondition violation—the *caller's* responsibility per Meyer—and reports it as `success: true`. No `require` / `ensure` is stated, so each caller grows its own defensive guard, and the duplicated guard *is* the symptom of the missing contract. Callers that forget the guard ship silent failures: refund flows record successful charges that never happened, reconciliation breaks, and bug ownership is mis-located onto the supplier when the actual fault is on the caller.
+**Result**: Invalid amounts cannot construct a `PositiveAmount`, so they cannot reach `chargeCard`. The contract is the type, not a prose comment. Caller-side guards are deleted because the type system enforces the precondition once at construction. `success: true` now truthfully implies a charge occurred.
 
 **Primitive Obsession at the Boundary — Secure by Design**:
-**Issue**: `placeOrder(customerId: String, quantity: Int, sku: String)` accepts raw primitives from controller through services to persistence; validation scattered across each layer (and missed in some).
-**Root Cause**: Domain meaning carried by primitive types instead of domain primitives. No `CustomerId`, `Quantity`, `Sku` whose constructor enforces invariants. With no parse-at-boundary, every interior caller must re-validate—and each one validates differently, or not at all.
-**Impact**: Negative quantities, malformed SKUs, and SQL-shaped customer IDs reach business logic and storage whenever a single validation site is forgotten. Bug class grows monotonically with every new caller.
-**Fix**: Replace primitives with domain primitives constructed at the boundary; interior signatures accept only domain primitives.
+**Request**: Replace the raw primitives in `placeOrder` with domain primitives parsed at the boundary. Interior signatures accept only the domain primitives; downstream defensive validation is deleted.
 
 ```diff
 --- a/src/order/PlaceOrderController.ts
@@ -144,7 +146,8 @@ Caller-side defensive checks are then deleted; bug ownership is unambiguous.
 +}
 ```
 
-Downstream defensive validation is deleted; the type system enforces the contract once at the boundary.
+**Rationale**: Secure by Design failure (primitive obsession). Domain meaning is carried by `String` / `Int` instead of types whose constructors enforce invariants. With no parse-at-boundary, every interior caller must re-validate—and each one validates differently, or not at all. Negative quantities, malformed SKUs, and SQL-shaped customer IDs reach business logic and storage whenever a single validation site is forgotten. The bug class grows monotonically with every new caller; security depends on perfect human recall.
+**Result**: Invalid state is unrepresentable past the parse step. The boundary parses untrusted input in fixed order (origin → size → lexical → syntax → semantics) and produces domain primitives or a rejection. Interior signatures are narrower; the same invariants are enforced once at the type level rather than scattered across every caller.
 
 ## What NOT to Report
 
