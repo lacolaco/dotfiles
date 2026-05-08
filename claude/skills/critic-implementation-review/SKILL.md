@@ -52,22 +52,18 @@ If the change introduces or modifies design (new abstraction, new boundary, new 
 
 ## Output Format
 
-**Report ONLY critical implementation defects. Every reported defect is a blocker.** No "minor", "consider", "acceptable trade-off" tier. Hedges signal the defect is not blocker-grade; delete them.
+**Report ONLY critical implementation defects. Every reported line comment is a blocker.** No "minor", "consider", "acceptable trade-off" tier. Hedges signal the defect is not blocker-grade; delete them.
 
-For each defect:
+Each line comment uses the **RRR format** (Adrienne Tacke, *Looks Good to Me*, Manning 2024)—action-first, three parts, no other tier:
 
-**Issue**: [Concise description; include the triggering input or ordering when relevant]
-**Cause**: [Specific line / assumption / missing check that produces the defect]
-**Impact**: [Concrete consequence—data loss, security exposure, hang, leak, wrong result for input X]
-**Fix**: [Minimal correct change as a **unified diff** in a fenced `diff` block, anchored with file path and surrounding context. Use prose only when the change cannot be reduced to a diff—and even then accompany with at least one representative diff snippet. Vague phrases without a diff are forbidden.]
+**Request**: [The concrete edit the author must make. Imperative. **Include a unified diff** in a fenced `diff` block anchored with file path, function/line context, and surrounding code. Prose only when the change cannot be reduced to a diff—and even then accompany with at least one representative diff snippet. Vague phrases without a diff are forbidden.]
+**Rationale**: [Why the request must be honored. Name the specific defect mechanism (the line, the assumption, the missing check, the triggering input or interleaving) and the concrete consequence in the same paragraph: data loss, security exposure, hang, leak, wrong result for input X.]
+**Result**: [The post-condition state once the request is applied. What the runtime, the test suite, or the call graph now guarantees that it did not before. Makes the goal of the request verifiable.]
 
 ### Examples
 
 **SQL Injection**:
-**Issue**: User-supplied `orderId` interpolated directly into the SQL query in `OrderRepository.findById` (line 42)
-**Cause**: Raw SQL string concatenation. No parameterization. Surrounding code uses the ORM's parameterized API; this site bypasses it.
-**Impact**: Attacker can dump or modify the orders table by sending `'; DROP TABLE orders; --` as `orderId`. Production-exploitable.
-**Fix**:
+**Request**: Replace the interpolated SQL in `OrderRepository.findById` (line 42) with a parameterized query, matching the ORM's parameterized API used elsewhere in this file.
 ```diff
 --- a/src/data/OrderRepository.ts
 +++ b/src/data/OrderRepository.ts
@@ -75,12 +71,11 @@ For each defect:
 -  return repo.query(`SELECT * FROM orders WHERE id='${orderId}'`);
 +  return repo.query('SELECT * FROM orders WHERE id = ?', [orderId]);
 ```
+**Rationale**: Raw SQL string concatenation lets an attacker inject arbitrary SQL by sending `'; DROP TABLE orders; --` as `orderId`. Production-exploitable with the current request signature. Surrounding code already uses the ORM's parameterized API; this site silently bypasses it.
+**Result**: User input is bound as a parameter, never as SQL. Injection at this site is structurally impossible; the call site matches the convention used by the rest of the file.
 
 **Race Condition**:
-**Issue**: `incrementBalance(userId, delta)` performs read-modify-write on `balances[userId]` without synchronization (lines 88–92)
-**Cause**: Shared map accessed from multiple request handlers concurrently. No lock, no atomic op.
-**Impact**: Lost updates under concurrent requests. Two simultaneous `+10` operations on a balance of `0` can leave it at `10` instead of `20`.
-**Fix**:
+**Request**: Replace the read-modify-write on `balances[userId]` (lines 88–92) with `computeIfPresent`, an atomic per-key update.
 ```diff
 --- a/src/wallet/Balances.java
 +++ b/src/wallet/Balances.java
@@ -89,12 +84,11 @@ For each defect:
 -  balances.put(userId, current + delta);
 +  balances.computeIfPresent(userId, (k, v) -> v + delta);
 ```
+**Rationale**: The map is shared across request handlers and the get/put pair has no lock. Two simultaneous `+10` operations on a balance of `0` can interleave between the `get` and the `put` and leave the balance at `10` instead of `20`. Data loss is silent and proportional to traffic.
+**Result**: The increment is atomic per key; concurrent updates are serialized by the map's internal locking. The lost-update class disappears at this call site without taking a lock spanning unrelated state.
 
 **Fail-Open on Auth Error**:
-**Issue**: `requireAdmin(user)` swallows exceptions from the role lookup and returns `true` on failure (line 17)
-**Cause**: The catch was added to "make tests pass" when the role service flapped, and turned into a fail-open.
-**Impact**: Any transient role-service failure grants admin to every authenticated user. Privilege escalation.
-**Fix**:
+**Request**: Delete the `try/catch` in `requireAdmin` (line 17). Let the role-lookup error propagate to the caller.
 ```diff
 --- a/src/auth/requireAdmin.ts
 +++ b/src/auth/requireAdmin.ts
@@ -106,13 +100,11 @@ For each defect:
 -  }
 +  return roles.lookup(user).contains("admin");
 ```
-Let the lookup error propagate (fail closed). If the role service flaps, the correct fix is upstream (cache / retry / circuit breaker).
+**Rationale**: The catch was added to "make tests pass" when the role service flapped and quietly turned into a fail-open. Any transient role-service failure now grants admin to every authenticated user for the duration of the outage. This is a privilege-escalation primitive, not error handling.
+**Result**: Authorization fails closed. A flaky role service produces request errors, not silent admin grants. The correct cure for flakiness is upstream (cache / retry / circuit breaker), and that conversation can happen at the right layer instead of being absorbed here.
 
 **Exception Swallowing — generic**:
-**Issue**: `loadUserPreferences(userId)` wraps the persistence call in `try { ... } catch (e) { return DEFAULT_PREFERENCES; }` (line 47). All errors—DB connection failure, schema mismatch, deserialization, real "user not found"—collapse into silent fall-through to defaults.
-**Cause**: Over-broad catch discarding the cause. No contract anywhere states "errors here must be ignored". Anti-charity: deliberate-looking framing is not a specification.
-**Impact**: Outages and bugs invisible. A schema migration that breaks the loader silently sends every user defaults, indistinguishable from fresh signup. Operators have no signal until users complain.
-**Fix**:
+**Request**: Distinguish "no record" from "infrastructure error" in `loadUserPreferences` (line 47). Remove the over-broad catch and use a null-coalesce on the data-layer result; let infrastructure errors propagate.
 ```diff
 --- a/src/users/loadUserPreferences.ts
 +++ b/src/users/loadUserPreferences.ts
@@ -125,7 +117,8 @@ Let the lookup error propagate (fail closed). If the role service flaps, the cor
 +  const found = await prefs.findByUser(userId);
 +  return found ?? DEFAULT_PREFERENCES; // missing record only — *not* error fallback
 ```
-Distinguish "no record" (data layer returns `null`) from "infrastructure error" (let it propagate). Default-on-missing is a contract; default-on-error is a bug.
+**Rationale**: Over-broad catch discarding the cause. DB connection failure, schema mismatch, deserialization error, and real "user not found" all collapse into silent fall-through to defaults. A schema migration that breaks the loader silently sends every user the default preferences, indistinguishable from fresh signup; operators have no signal until users complain. Anti-charity rule: the deliberate look of the catch is not a specification—no contract or test enforces "this error must be ignored".
+**Result**: Default-on-missing is a contract (the data layer returns `null` for absent rows). Default-on-error is gone; infrastructure errors propagate, surface in monitoring, and are owned by the layer that can actually fix them.
 
 ## What NOT to Report
 
