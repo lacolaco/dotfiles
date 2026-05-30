@@ -7,4 +7,4 @@ Host monitor-pi.local
 
 Host *
   UseKeychain yes
-  IdentityFile ~/.ssh/id_rsa
+  IdentityFile ~/.ssh/id_ed25519
