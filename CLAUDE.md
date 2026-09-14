@@ -47,6 +47,7 @@ claude/skills/ → ~/.claude/skills
 4. `setup_fish.sh`: Fish設定 + デフォルトシェル変更 + Fisher
 5. `setup_dock.sh`: Dock完全クリア + 必要アプリ配置（カスタマイズ可能）
 6. `setup_claude.sh`: Claude Code設定 + コマンド/エージェント/スキル
+7. `setup_tiley.sh`: Tiley設定（UserDefaultsへ`defaults write`。symlink不可のため）
 
 ### Tool Management
 **Homebrew** (Brewfile):
@@ -91,6 +92,9 @@ brew doctor
 
 # 8. Dock設定（オプション: スクリプト編集で好みのアプリを指定）
 ./setup_dock.sh
+
+# 9. Tiley設定（グリッドとグローバルホットキーをdefaults writeで書き込む）
+./setup_tiley.sh
 ```
 
 ### Brewfile更新
