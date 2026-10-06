@@ -2,67 +2,97 @@ tap "aquaproj/aqua"
 tap "k1low/tap", trusted: true
 tap "stablyai/orca"
 
-brew "actionlint"
+# ツール管理
 brew "aqua"
-brew "cloudflared"
+brew "mise"
+
+# シェルと基本コマンド
 brew "coreutils"
 brew "curl"
 brew "direnv"
-brew "docker"
-brew "dockutil"
-brew "doppler"
-brew "ffmpeg"
 brew "fish"
-brew "git"
-brew "git-lfs"
-brew "gh"
-brew "imagemagick"
 brew "jq"
-brew "k1low/tap/git-wt"
-brew "ko"
-brew "mise"
-brew "mkcert"
-brew "openjdk"
 brew "peco"
-brew "rebar3" # Gleam の Erlang ターゲットが Erlang 製の依存をビルドするのに使う
-brew "silicon"
 brew "tmux"
 brew "tree"
-brew "typst"
 brew "wget"
 
-cask "1password"
-cask "1password-cli"
-cask "amical"
-cask "android-platform-tools"
-cask "antigravity"
-cask "audacity"
-cask "betterdisplay"
-cask "bluesnooze"
-cask "claude"
-cask "cleanshot"
-cask "cloudflare-warp"
-cask "codex"
-cask "discord"
-cask "figma"
-cask "gcloud-cli"
-cask "google-drive"
+# Git と GitHub
+brew "actionlint"
+brew "gh"
+brew "git"
+brew "git-lfs"
+brew "k1low/tap/git-wt"
+
+# コンテナとビルド
+brew "docker"
+brew "ko"
+
+# 言語ランタイムとビルドツール
+brew "openjdk"
+brew "rebar3" # Gleam の Erlang ターゲットが Erlang 製の依存をビルドするのに使う
+
+# ネットワーク、証明書、シークレット
+brew "cloudflared"
+brew "doppler"
+brew "mkcert"
+
+# 画像、動画、文書
+brew "ffmpeg"
+brew "imagemagick"
+brew "silicon"
+brew "typst"
+
+# macOS
+brew "dockutil"
+
+# ブラウザ
+cask "firefox"
 cask "google-chrome"
 cask "google-chrome@canary"
-cask "google-japanese-ime"
-cask "firefox"
-cask "karabiner-elements"
-cask "krisp"
-cask "linear"
-cask "loopback"
 cask "microsoft-edge"
-cask "notunes"
-cask "okta-verify"
-cask "ollama-app"
+
+# 開発
+cask "android-platform-tools"
+cask "antigravity"
+cask "gcloud-cli"
 cask "orbstack"
 cask "stablyai/orca/orca"
-cask "slack"
-cask "k1low/tap/tiley"
 cask "visual-studio-code"
-cask "xld"
+
+# AI
+cask "claude"
+cask "codex"
+cask "ollama-app"
+
+# コミュニケーションと仕事
+cask "discord"
+cask "figma"
+cask "krisp"
+cask "linear"
+cask "slack"
 cask "zoom"
+
+# パスワードと認証、ネットワーク
+cask "1password"
+cask "1password-cli"
+cask "cloudflare-warp"
+cask "okta-verify"
+
+# 音声と音楽
+cask "audacity"
+cask "loopback"
+cask "xld"
+
+# 入力、ウィンドウ、ディスプレイ
+cask "amical"
+cask "betterdisplay"
+cask "google-japanese-ime"
+cask "k1low/tap/tiley"
+cask "karabiner-elements"
+
+# ユーティリティ
+cask "bluesnooze"
+cask "cleanshot"
+cask "google-drive"
+cask "notunes"
