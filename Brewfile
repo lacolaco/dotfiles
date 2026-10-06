@@ -13,7 +13,6 @@ brew "direnv"
 brew "fish"
 brew "jq"
 brew "peco"
-brew "tmux"
 brew "tree"
 brew "wget"
 
