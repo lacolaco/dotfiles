@@ -24,7 +24,6 @@ brew "git-lfs"
 brew "k1low/tap/git-wt"
 
 # コンテナとビルド
-brew "docker"
 brew "ko"
 
 # 言語ランタイムとビルドツール
