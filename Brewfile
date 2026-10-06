@@ -24,7 +24,7 @@ brew "mise"
 brew "mkcert"
 brew "openjdk"
 brew "peco"
-brew "rebar3"
+brew "rebar3" # Gleam の Erlang ターゲットが Erlang 製の依存をビルドするのに使う
 brew "silicon"
 brew "tmux"
 brew "tree"
