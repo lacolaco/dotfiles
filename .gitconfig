@@ -2,6 +2,7 @@
 	excludesfile = /Users/lacolaco/.gitignore_global
 	autocrlf = input
 	editor = code --wait
+	lockfilePid = true
 [user]
 	email = suguru.inatomi@gmail.com
 	name = Suguru Inatomi
@@ -17,6 +18,8 @@
 	followRemoteHEAD = always
 [push]
 	autoSetupRemote = true
+[rebase]
+	updateRefs = true
 [gpg]
 	format = ssh
 [commit]
