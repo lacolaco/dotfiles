@@ -100,6 +100,8 @@ brew doctor
 
 ### Brewfile更新
 
+手元の環境とリポジトリのずれをまとめて解消するときは、`dotfiles-sync` スキル (`.claude/skills/dotfiles-sync/`) の手順に従う。
+
 ```bash
 # 1. 現在の状態を確認（mise管理ツールに注釈付き）
 ./update_brewfile.sh
