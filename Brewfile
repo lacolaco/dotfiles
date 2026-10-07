@@ -1,4 +1,3 @@
-tap "aquaproj/aqua"
 tap "k1low/tap", trusted: true
 tap "stablyai/orca"
 
