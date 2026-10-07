@@ -33,11 +33,6 @@ fish/ → ~/.config/fish
 karabiner/ → ~/.config/karabiner
 mise/ → ~/.config/mise
 ssh/config → ~/.ssh/config
-claude/CLAUDE.md → ~/.claude/CLAUDE.md
-claude/settings.json → ~/.claude/settings.json
-claude/agents/ → ~/.claude/agents
-claude/commands/ → ~/.claude/commands
-claude/skills/ → ~/.claude/skills
 ```
 
 ### Setup Scripts
@@ -46,8 +41,7 @@ claude/skills/ → ~/.claude/skills
 3. `setup_git.sh`: Git設定 + SSH鍵生成/GitHub登録（`gh`必要）
 4. `setup_fish.sh`: Fish設定 + デフォルトシェル変更 + Fisher
 5. `setup_dock.sh`: Dock完全クリア + 必要アプリ配置（カスタマイズ可能）
-6. `setup_claude.sh`: Claude Code設定 + コマンド/エージェント/スキル
-7. `setup_tiley.sh`: Tiley設定（UserDefaultsへ`defaults write`。symlink不可のため）
+6. `setup_tiley.sh`: Tiley設定（UserDefaultsへ`defaults write`。symlink不可のため）
 
 ### Tool Management
 **Homebrew** (Brewfile):
@@ -85,16 +79,13 @@ brew doctor
 # 5. Git設定 + SSH鍵生成/GitHub登録
 ./setup_git.sh
 
-# 6. Claude Code設定（カスタムコマンド・エージェント）
-./setup_claude.sh
-
-# 7. Fish設定
+# 6. Fish設定
 ./setup_fish.sh
 
-# 8. Dock設定（オプション: スクリプト編集で好みのアプリを指定）
+# 7. Dock設定（オプション: スクリプト編集で好みのアプリを指定）
 ./setup_dock.sh
 
-# 9. Tiley設定（グリッドとグローバルホットキーをdefaults writeで書き込む）
+# 8. Tiley設定（グリッドとグローバルホットキーをdefaults writeで書き込む）
 ./setup_tiley.sh
 ```
 
