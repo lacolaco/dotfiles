@@ -33,6 +33,7 @@ fish/ → ~/.config/fish
 karabiner/ → ~/.config/karabiner
 mise/ → ~/.config/mise
 ssh/config → ~/.ssh/config
+swiftbar/ → ~/.config/swiftbar
 ```
 
 ### Setup Scripts
@@ -42,6 +43,7 @@ ssh/config → ~/.ssh/config
 4. `setup_fish.sh`: Fish設定 + デフォルトシェル変更 + Fisher
 5. `setup_dock.sh`: Dock完全クリア + 必要アプリ配置（カスタマイズ可能）
 6. `setup_tiley.sh`: Tiley設定（UserDefaultsへ`defaults write`。symlink不可のため）
+7. `setup_swiftbar.sh`: SwiftBarプラグインディレクトリのsymlink + `PluginDirectory`設定
 
 ### Tool Management
 **Homebrew** (Brewfile):
@@ -87,6 +89,9 @@ brew doctor
 
 # 8. Tiley設定（グリッドとグローバルホットキーをdefaults writeで書き込む）
 ./setup_tiley.sh
+
+# 9. SwiftBar設定（メニューバープラグイン）
+./setup_swiftbar.sh
 ```
 
 ### Brewfile更新
@@ -146,6 +151,11 @@ gh auth refresh -h github.com -s admin:public_key -s admin:ssh_signing_key
 - **プロンプト**: `fish/functions/fish_prompt.fish`
 - **Fisher**: プラグイン管理（`fish/fish_plugins`でプラグインリスト管理）
   - bass: Bash互換ユーティリティ
+
+### SwiftBar Plugins
+- `swiftbar/lid-awake.10s.sh`: 蓋を閉じてもスリープしない状態（`pmset -a disablesleep`）をメニューバーからトグル
+  - 切り替え時に管理者認証ダイアログが出る
+  - 有効中は蓋を閉じても起動したままになるため、使い終わったら必ず戻す
 
 ### Package Manager Auto-detection
 `p` function: lockfileを検出して自動選択
