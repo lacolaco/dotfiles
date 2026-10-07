@@ -3,7 +3,14 @@ node_modules
 
 .claude/settings.local.json
 .claude/**/*.local.*
+.claude/scheduled_tasks.lock
+.claude/worktrees
+.handover
+.knowledge
 *.local.md
 .kiro
 .wt
 .playwright-cli
+**/.claude/settings.local.json
+**/.orca
+**/.orca-worktree-trash

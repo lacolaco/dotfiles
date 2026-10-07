@@ -57,3 +57,10 @@ fish_add_path /Users/lacolaco/.antigravity/antigravity/bin
 
 # sentry
 fish_add_path "/Users/lacolaco/.sentry/bin"
+
+# Added by Antigravity IDE
+fish_add_path /Users/lacolaco/.antigravity-ide/antigravity-ide/bin
+
+
+# Added by Antigravity CLI installer
+set -gx PATH "/Users/lacolaco/.local/bin" $PATH

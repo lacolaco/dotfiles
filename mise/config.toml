@@ -3,15 +3,15 @@
 go = "latest"
 "go:github.com/k1LoW/deck/cmd/deck" = "latest"
 node = "22"
-claude-code = "latest"
 python = "latest"
 uv = "latest"
 watchexec = "latest"
 "ubi:gitlab-org/cli" = { version = "latest", exe = "glab", provider = "gitlab" }
 pnpm = "latest"
-"go:github.com/k1LoW/git-wt" = "latest"
 "npm:@playwright/cli" = "latest"
 sentry = "latest"
+claude = "latest"
+"npm:cf" = "1.0.0-beta.12"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
