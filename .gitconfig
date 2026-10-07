@@ -12,6 +12,11 @@
     # insteadOf = https://github.com/
 [init]
 	defaultBranch = main
+[fetch]
+	prune = true
+	followRemoteHEAD = always
+[push]
+	autoSetupRemote = true
 [gpg]
 	format = ssh
 [commit]
