@@ -23,7 +23,6 @@ brew "git-lfs"
 brew "k1low/tap/git-wt"
 brew "ko"
 brew "mise"
-brew "mkcert"
 brew "openjdk"
 brew "rebar3" # Gleam の Erlang ターゲットが Erlang 製の依存をビルドするのに使う
 cask "android-platform-tools"
