@@ -50,10 +50,10 @@ ssh/config → ~/.ssh/config
 - aqua, mise本体
 
 **mise** (mise/config.toml):
-- 言語: node, python, go, deno
-- CLIツール: gh, glab, watchexec
+- 言語: node, python, go
+- CLIツール: gh, glab, watchexec, terraform
 - Claude Code: `claude`
-- npm globals: @playwright/cli, cf
+- npm globals: @playwright/cli, cf, difit
 - aqua経由: pinact
 - go経由: deck
 - ubi経由: glab
