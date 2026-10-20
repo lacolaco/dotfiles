@@ -31,6 +31,7 @@ cask "visual-studio-code"
 
 # AI
 cask "antigravity"
+cask "antigravity-cli"
 cask "claude"
 cask "codex"
 cask "ollama-app"

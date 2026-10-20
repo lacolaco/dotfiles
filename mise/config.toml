@@ -2,7 +2,7 @@
 "aqua:suzuki-shunsuke/pinact" = "latest"
 go = "latest"
 "go:github.com/k1LoW/deck/cmd/deck" = "latest"
-node = "22"
+node = "24"
 python = "latest"
 uv = "latest"
 watchexec = "latest"
@@ -12,6 +12,8 @@ pnpm = "latest"
 sentry = "latest"
 claude = "latest"
 "npm:cf" = "1.0.0-beta.12"
+terraform = "latest"
+"npm:difit" = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]

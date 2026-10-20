@@ -7,7 +7,11 @@ node_modules
 .claude/worktrees
 .handover
 .knowledge
+.claude/**/*.local/
+.claude/handover
+.claude/*.lock
 *.local.md
+.claude/skills/*.local/SKILL.md
 .kiro
 .wt
 .playwright-cli
